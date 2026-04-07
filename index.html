@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Lead Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;}
+*{scrollbar-width:thin;scrollbar-color:#C8BEAF transparent;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:#C8BEAF;border-radius:2px;}
+select option{background:#fff;color:#1A2744;}
+@keyframes shk{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}
+.shk{animation:shk .4s ease}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+const GAS="https://script.google.com/macros/s/AKfycbxZkF5AL0xrhyKNKltPs_EmrZAWrtd1NGj9stqyF3QAQEBY-bpz2f9odRERGDfTEkvcxQ/exec";
+
+const gasGet=()=>fetch(GAS).then(r=>r.json());
+const gasPost=d=>fetch(GAS,{method:"POST",body:JSON.stringify(d)});
+
+const LS=["Inbound Email","Outbound Email","Word of Mouth","LinkedIn","Direct Marketing","Email Marketing","Former Clients","Driver Referrals"];
+const STAGES=["Opportunities","Proposal","Negotiation","Gone Silent","Lead Lost to Competitor","Lead Lost Out of Scope","Contract Sign Off"];
+const SECTORS=["Oil & Gas","Hotels","FMCG","Travel & Tours Co","Airline","Event Management Co","Semi-Govt Entity","Banks","Foreign Govt Office","Exhibitors"];
+const CHANNELS=["Email","Call","WhatsApp","LinkedIn Messenger"];
+const BTYPES=["B2B","B2C","B2G","Non-Profit","SME","Enterprise"];
+const SC={"Opportunities":"#2563EB","Proposal":"#7C3AED","Negotiation":"#D97706","Gone Silent":"#6B7280","Lead Lost to Competitor":"#DC2626","Lead Lost Out of Scope":"#EA580C","Contract Sign Off":"#059669"};
+const P={bg:"#F2EFE9",card:"#fff",sb:"#1A2744",acc:"#C9962A",bdr:"#E2D9CC",bdrk:"#C8BEAF",ibg:"#FAF9F6",tp:"#1A2744",ts:"#4B5A78",tm:"#94A3B8",acl:"#FEF3DC",dan:"#DC2626",suc:"#059669",inf:"#2563EB",sh:"0 2px 12px rgba(26,39,68,0.08)"};
+
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const fd=d=>new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+const fdt=d=>new Date(d).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+
+const Av=({name,sz=28})=>{const i=(name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();const cols=["#2563EB","#7C3AED","#059669","#D97706","#DC2626","#0891B2"];const c=cols[(name||"").charCodeAt(0)%cols.length];return <div style={{width:sz,height:sz,borderRadius:"50%",background:c+"18",border:`2px solid ${c}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:sz*.36,fontWeight:800,color:c,flexShrink:0}}>{i}</div>;};
+const Bdg=({label,color="#6B7280",sm})=><span style={{display:"inline-flex",alignItems:"center",padding:sm?"2px 7px":"3px 10px",borderRadius:20,background:color+"18",color,border:`1px solid ${color}33`,fontSize:sm?10:11,fontWeight:700,whiteSpace:"nowrap"}}>{label}</span>;
+const bi={background:P.ibg,border:`1.5px solid ${P.bdrk}`,borderRadius:8,padding:"9px 12px",color:P.tp,fontSize:13,width:"100%",boxSizing:"border-box",outline:"none",fontFamily:"inherit"};
+const fo=e=>{e.target.style.borderColor=P.acc;e.target.style.boxShadow=`0 0 0 3px ${P.acc}18`;};
+const fb=e=>{e.target.style.borderColor=P.bdrk;e.target.style.boxShadow="none";};
+const Inp=p=><input {...p} style={{...bi,...p.style}} onFocus={fo} onBlur={fb}/>;
+const Sel=({children,...p})=><select {...p} style={{...bi,...p.style,cursor:"pointer"}} onFocus={fo} onBlur={fb}>{children}</select>;
+const Txa=p=><textarea {...p} style={{...bi,...p.style,resize:"vertical",minHeight:72}} onFocus={fo} onBlur={fb}/>;
+const Btn=({onClick,children,v="pri",sm,icon,disabled,full,style:ex={}})=>{
+  const vs={pri:{background:`linear-gradient(135deg,${P.acc},#E2AA2E)`,color:"#fff",border:"none"},sec:{background:"transparent",color:P.acc,border:`1.5px solid ${P.acc}`},dan:{background:"transparent",color:P.dan,border:`1.5px solid ${P.dan}`},gh:{background:P.bg,color:P.ts,border:`1.5px solid ${P.bdr}`},suc:{background:"transparent",color:P.suc,border:`1.5px solid ${P.suc}`},inf:{background:"transparent",color:P.inf,border:`1.5px solid ${P.inf}`}};
+  return <button onClick={onClick} disabled={disabled} style={{...vs[v],borderRadius:8,padding:sm?"5px 11px":"8px 16px",fontSize:sm?11:13,fontWeight:700,cursor:disabled?"not-allowed":"pointer",opacity:disabled?.5:1,display:"inline-flex",alignItems:"center",gap:5,whiteSpace:"nowrap",fontFamily:"inherit",width:full?"100%":"auto",justifyContent:full?"center":"flex-start",...ex}}>{icon&&<Ic n={icon} s={sm?12:14}/>}{children}</button>;
+};
+const Fld=({label,req,err,hint,children})=><div style={{marginBottom:15}}><label style={{display:"block",marginBottom:5,fontSize:10,fontWeight:700,color:P.ts,letterSpacing:"0.8px",textTransform:"uppercase"}}>{label}{req&&<span style={{color:P.dan,marginLeft:2}}>*</span>}</label>{children}{hint&&!err&&<span style={{fontSize:10,color:P.tm,marginTop:3,display:"block"}}>{hint}</span>}{err&&<span style={{fontSize:10,color:P.dan,marginTop:3,display:"block",fontWeight:600}}>⚠ {err}</span>}</div>;
+const Div=()=><div style={{height:1,background:P.bdr,margin:"18px 0"}}/>;
+const Mdl=({title,subtitle,onClose,children,wide})=>(
+  <div style={{position:"fixed",inset:0,background:"rgba(26,39,68,0.42)",backdropFilter:"blur(5px)",zIndex:1000,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 16px",overflowY:"auto"}}>
+    <div style={{background:P.card,borderRadius:16,width:"100%",maxWidth:wide?900:620,boxShadow:"0 24px 60px rgba(26,39,68,0.2)",border:`1px solid ${P.bdr}`,marginBottom:28}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"18px 24px 14px",borderBottom:`1px solid ${P.bdr}`}}>
+        <div><h2 style={{margin:0,fontSize:16,fontWeight:800,color:P.tp,fontFamily:"Georgia,serif"}}>{title}</h2>{subtitle&&<p style={{margin:"3px 0 0",fontSize:12,color:P.ts}}>{subtitle}</p>}</div>
+        <button onClick={onClose} style={{background:P.bg,border:`1px solid ${P.bdr}`,borderRadius:7,padding:6,cursor:"pointer",display:"flex",marginLeft:12}}><Ic n="X" s={14}/></button>
+      </div>
+      <div style={{padding:24}}>{children}</div>
+    </div>
+  </div>
+);
+
+const Ic=({n,s=16,c="currentColor"})=>{
+  const d={
+    X:<path d="M18 6L6 18M6 6l12 12" stroke={c} fill="none" strokeWidth="2" strokeLinecap="round"/>,
+    plus:<path d="M12 5v14M5 12h14" stroke={c} fill="none" strokeWidth="2" strokeLinecap="round"/>,
+    edit:<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    trash:<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    dl:<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    eye:<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    eoff:<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    ok:<path d="M20 6L9 17l-5-5" stroke={c} fill="none" strokeWidth="2.2" strokeLinecap="round"/>,
+    out:<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    msg:<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    key:<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    shd:<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    cvt:<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    usr:<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    bk:<path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 3h2v-3h2v3h2v2h-2v3h-2v-3h-2v-2z" fill={c}/>,
+    em:<><rect x="2" y="4" width="20" height="16" rx="2" stroke={c} fill="none" strokeWidth="1.8"/><path d="M2 8l10 6 10-6" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/></>,
+    ch:<path d="M18 20V10M12 20V4M6 20v-6" stroke={c} fill="none" strokeWidth="2" strokeLinecap="round"/>,
+    ar:<path d="M5 12h14M12 5l7 7-7 7" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    cal:<path d="M8 2v3M16 2v3M3 8h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    rf:<path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+    gs:<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke={c} fill="none" strokeWidth="1.8" strokeLinecap="round"/>,
+  };
+  return <svg width={s} height={s} viewBox="0 0 24 24" style={{flexShrink:0}}>{d[n]||null}</svg>;
+};
+
+function Login({users,onLogin}){
+  const [u,setU]=useState("");const [p,setP]=useState("");const [sp,setSp]=useState(false);const [err,setErr]=useState("");const [shk,setShk]=useState(false);
+  const go=()=>{const usr=users.find(x=>x.username.toLowerCase()===u.trim().toLowerCase());if(!usr){setErr("Username not found.");setShk(true);setTimeout(()=>setShk(false),500);return;}if(usr.password!==p){setErr("Incorrect password.");setShk(true);setTimeout(()=>setShk(false),500);return;}onLogin(usr);};
+  return(
+    <div style={{minHeight:"100vh",background:P.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{width:"100%",maxWidth:420}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <div style={{width:52,height:52,borderRadius:14,background:P.sb,display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:14}}><Ic n="usr" s={24} c={P.acc}/></div>
+          <h1 style={{margin:"0 0 4px",fontSize:26,fontWeight:800,color:P.tp,fontFamily:"Georgia,serif"}}>Lead Tracker</h1>
+          <p style={{margin:0,color:P.ts,fontSize:13}}>Connected to Google Sheets · Sign in</p>
+        </div>
+        <div className={shk?"shk":""} style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:16,padding:"24px 26px 20px",boxShadow:P.sh}}>
+          <Fld label="Username"><Inp value={u} onChange={e=>{setU(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="Enter username" autoFocus/></Fld>
+          <Fld label="Password">
+            <div style={{position:"relative"}}><Inp type={sp?"text":"password"} value={p} onChange={e=>{setP(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="Enter password" style={{paddingRight:40}}/>
+            <button onClick={()=>setSp(v=>!v)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",display:"flex",padding:2}}><Ic n={sp?"eoff":"eye"} s={15} c={P.tm}/></button></div>
+          </Fld>
+          {err&&<div style={{padding:"8px 12px",borderRadius:7,background:P.dan+"10",border:`1.5px solid ${P.dan}33`,fontSize:12,color:P.dan,fontWeight:600,marginBottom:14}}>{err}</div>}
+          <button onClick={go} style={{width:"100%",padding:11,background:`linear-gradient(135deg,${P.acc},#E2AA2E)`,color:"#fff",border:"none",borderRadius:9,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Sign In →</button>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RemarkBox({onAdd,cu}){
+  const [txt,setTxt]=useState("");const [ch,setCh]=useState("");const [rem,setRem]=useState("");
+  const gc=(t,d)=>{const dt=new Date(d||Date.now());dt.setDate(dt.getDate()+1);const s=dt.toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";const e=new Date(dt.getTime()+3600000).toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}&dates=${s}/${e}`;};
+  return(
+    <div style={{background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:10,padding:13,marginTop:12}}>
+      {/* Show who is adding the remark */}
+      <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8,padding:"6px 10px",background:P.acl,borderRadius:7,border:`1px solid ${P.acc}33`}}>
+        <Av name={cu.name} sz={20}/>
+        <span style={{fontSize:11,color:P.tp,fontWeight:700}}>Adding as <span style={{color:P.acc}}>{cu.name}</span></span>
+      </div>
+      <Txa value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Add a remark, update, or meeting note..." style={{marginBottom:10,background:"#fff"}}/>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        <Sel value={ch} onChange={e=>setCh(e.target.value)} style={{flex:1,minWidth:140,background:"#fff"}}><option value="">Channel (optional)</option>{CHANNELS.map(c=><option key={c}>{c}</option>)}</Sel>
+        <div style={{display:"flex",alignItems:"center",gap:5,flex:1,minWidth:160}}><Ic n="cal" s={12} c={P.tm}/><Inp type="date" value={rem} onChange={e=>setRem(e.target.value)} style={{flex:1,background:"#fff"}}/></div>
+        {rem&&<a href={gc("Follow-up",rem)} target="_blank" rel="noreferrer"><Btn v="gh" sm icon="cal">GCal</Btn></a>}
+        <Btn sm icon="msg" onClick={()=>{
+          if(!txt.trim())return;
+          onAdd({
+            id:uid(),
+            author:cu.name,
+            authorId:cu.id,
+            role:cu.role,
+            text:txt,
+            channel:ch,
+            reminder:rem,
+            date:new Date().toISOString()
+          });
+          setTxt("");setCh("");setRem("");
+        }}>Add</Btn>
+      </div>
+    </div>
+  );
+}
+
+function Remarks({remarks}){
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:6}}>
+      {(remarks||[]).map(r=>(
+        <div key={r.id} style={{background:r.sys?P.acl:P.bg,borderRadius:9,padding:12,border:`1.5px solid ${r.sys?P.acc+"44":P.bdr}`}}>
+          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,flexWrap:"wrap"}}>
+            <Av name={r.author||"?"} sz={22}/>
+            <span style={{fontWeight:700,fontSize:12,color:P.tp}}>{r.author||"Unknown"}</span>
+            <Bdg label={r.role==="admin"?"ADMIN":"SALES"} color={r.role==="admin"?P.acc:P.inf} sm/>
+            {r.channel&&<Bdg label={r.channel} color="#7C3AED" sm/>}
+            {r.sys&&<Bdg label="System" color={P.acc} sm/>}
+            <span style={{marginLeft:"auto",fontSize:10,color:P.tm}}>{fdt(r.date)}</span>
+          </div>
+          <p style={{margin:0,fontSize:12,color:P.ts,lineHeight:1.6}}>{r.text}</p>
+          {r.reminder&&<div style={{marginTop:6,fontSize:10,color:P.acc,fontWeight:600}}>⏰ Reminder: {fd(r.reminder)}</div>}
+        </div>
+      ))}
+      {!(remarks||[]).length&&<div style={{color:P.tm,fontSize:12,textAlign:"center",padding:16,background:P.bg,borderRadius:8,border:`1.5px dashed ${P.bdr}`}}>No remarks yet.</div>}
+    </div>
+  );
+}
+
+function LeadDetail({lead,onClose,onUpdate,cu,users}){
+  const [tab,setTab]=useState("info");const [editing,setEditing]=useState(false);
+  const ce=cu.role==="admin"||cu.id===lead.assignedTo;
+  const au=users.find(u=>u.id===lead.assignedTo);
+  const chStage=s=>{const r={id:uid(),author:cu.name,authorId:cu.id,text:`Stage → "${s}"`,channel:"",date:new Date().toISOString(),sys:true};onUpdate({...lead,stage:s,remarks:[...(lead.remarks||[]),r],updatedAt:new Date().toISOString()});};
+  const addR=useCallback(r=>onUpdate({...lead,remarks:[...(lead.remarks||[]),r],updatedAt:new Date().toISOString()}),[lead,onUpdate]);
+  if(editing)return <Mdl title={lead.company} onClose={onClose} wide><LeadForm lead={lead} users={users} onClose={()=>setEditing(false)} onSave={d=>{onUpdate({...lead,...d,updatedAt:new Date().toISOString()});setEditing(false);}}/></Mdl>;
+  return(
+    <Mdl title={lead.company} subtitle={`${lead.contact} · ${lead.email}`} onClose={onClose} wide>
+      <div style={{display:"flex",gap:7,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+        <Bdg label={lead.stage||"Opportunities"} color={SC[lead.stage||"Opportunities"]}/><Bdg label={lead.clientSector} color={P.inf}/><Bdg label={lead.leadSource} color="#7C3AED"/>
+        {lead.fromEmailLog&&<Bdg label="From Email Log" color={P.suc}/>}
+        <div style={{marginLeft:"auto"}}>{ce&&<Btn v="gh" sm icon="edit" onClick={()=>setEditing(true)}>Edit</Btn>}</div>
+      </div>
+      <div style={{display:"flex",marginBottom:18,borderBottom:`1.5px solid ${P.bdr}`}}>
+        {["info","remarks","history"].map(t=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 16px",background:"none",border:"none",borderBottom:`2.5px solid ${tab===t?P.acc:"transparent"}`,color:tab===t?P.acc:P.ts,cursor:"pointer",fontSize:12,fontWeight:700,textTransform:"capitalize",fontFamily:"inherit"}}>{t}</button>)}
+      </div>
+      {tab==="info"&&(
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 28px"}}>
+          {[["Contact",lead.contact],["Email",lead.email],["Mobile",lead.mobile||"—"],["Type",lead.businessType||"—"],["Source",lead.leadSource],["Sector",lead.clientSector],["Assigned",au?.name||"Unassigned"],["Created",fd(lead.createdAt)],["Updated",fd(lead.updatedAt||lead.createdAt)]].map(([k,v])=>(
+            <div key={k} style={{marginBottom:13}}><div style={{fontSize:10,color:P.tm,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:2}}>{k}</div><div style={{fontSize:13,color:P.tp,fontWeight:500}}>{v}</div></div>
+          ))}
+          {lead.notes&&<div style={{gridColumn:"1/-1",marginBottom:13}}><div style={{fontSize:10,color:P.tm,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:3}}>Notes</div><div style={{fontSize:12,color:P.ts,lineHeight:1.6,background:P.bg,padding:"9px 12px",borderRadius:7,border:`1px solid ${P.bdr}`}}>{lead.notes}</div></div>}
+          {ce&&<div style={{gridColumn:"1/-1",marginTop:8}}>
+            <Div/><div style={{fontSize:10,color:P.ts,marginBottom:8,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px"}}>Change Stage</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>{STAGES.map(s=>{const a=s===(lead.stage||"Opportunities");const col=SC[s];return <button key={s} onClick={()=>chStage(s)} style={{padding:"5px 11px",borderRadius:20,fontSize:10,fontWeight:700,border:`1.5px solid ${a?col:col+"55"}`,background:a?col:"transparent",color:a?"#fff":col,cursor:"pointer"}}>{s}</button>;})}</div>
+          </div>}
+        </div>
+      )}
+      {tab==="remarks"&&<><Remarks remarks={lead.remarks}/>{ce&&<RemarkBox onAdd={addR} cu={cu}/>}</>}
+      {tab==="history"&&<div style={{maxHeight:380,overflowY:"auto"}}>{[...(lead.remarks||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).map((r,i,arr)=>(
+        <div key={r.id} style={{display:"flex",gap:10,marginBottom:13}}>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}><Av name={r.author} sz={26}/>{i<arr.length-1&&<div style={{width:2,flex:1,background:P.bdr,margin:"3px 0"}}/>}</div>
+          <div style={{flex:1,paddingTop:2}}><div style={{fontSize:10,color:P.tm,marginBottom:1}}>{fdt(r.date)}</div><div style={{fontSize:12,color:r.sys?P.acc:P.ts,fontWeight:r.sys?600:400}}>{r.sys?"⚡ ":""}{r.text}</div>{r.channel&&<Bdg label={r.channel} color={P.inf} sm/>}</div>
+        </div>
+      ))}{!(lead.remarks||[]).length&&<p style={{color:P.tm,textAlign:"center",fontSize:12}}>No history.</p>}</div>}
+    </Mdl>
+  );
+}
+
+function LeadForm({lead,onSave,onClose,users}){
+  const E={company:"",contact:"",email:"",mobile:"",businessType:"",leadSource:"",clientSector:"",assignedTo:"",notes:""};
+  const [f,setF]=useState(lead||E);const [err,setErr]=useState({});
+  const set=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const ok=()=>{const e={};if(!f.company.trim())e.company="Required";if(!f.contact.trim())e.contact="Required";if(!f.email.includes("@"))e.email="Valid email";if(!f.leadSource)e.leadSource="Required";if(!f.clientSector)e.clientSector="Required";setErr(e);return!Object.keys(e).length;};
+  return(
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 18px"}}>
+        <Fld label="Company" req err={err.company}><Inp value={f.company} onChange={set("company")} placeholder="Company name"/></Fld>
+        <Fld label="Contact Person" req err={err.contact}><Inp value={f.contact} onChange={set("contact")} placeholder="Full name"/></Fld>
+        <Fld label="Email" req err={err.email}><Inp type="email" value={f.email} onChange={set("email")} placeholder="email@co.com"/></Fld>
+        <Fld label="Mobile"><Inp value={f.mobile} onChange={set("mobile")} placeholder="+971 50 000 0000"/></Fld>
+        <Fld label="Business Type"><Sel value={f.businessType} onChange={set("businessType")}><option value="">Select</option>{BTYPES.map(s=><option key={s}>{s}</option>)}</Sel></Fld>
+        <Fld label="Lead Source" req err={err.leadSource}><Sel value={f.leadSource} onChange={set("leadSource")}><option value="">Select</option>{LS.map(s=><option key={s}>{s}</option>)}</Sel></Fld>
+        <Fld label="Client Sector" req err={err.clientSector}><Sel value={f.clientSector} onChange={set("clientSector")}><option value="">Select</option>{SECTORS.map(s=><option key={s}>{s}</option>)}</Sel></Fld>
+        <Fld label="Assign To"><Sel value={f.assignedTo} onChange={set("assignedTo")}><option value="">Unassigned</option>{users.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</Sel></Fld>
+      </div>
+      <Fld label="Notes"><Txa value={f.notes} onChange={set("notes")} placeholder="Initial notes..."/></Fld>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn v="gh" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(ok())onSave(f);}} icon="ok">Save Lead</Btn></div>
+    </div>
+  );
+}
+
+function EmailLogForm({onSave,onClose}){
+  const [f,setF]=useState({subject:"",toCompany:"",toContact:"",toEmail:"",clientSector:"",sentDate:new Date().toISOString().slice(0,10),body:"",status:"Sent"});
+  const [err,setErr]=useState({});
+  const set=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const ok=()=>{const e={};if(!f.subject.trim())e.subject="Required";if(!f.toCompany.trim())e.toCompany="Required";if(!f.toEmail.includes("@"))e.toEmail="Valid email";if(!f.clientSector)e.clientSector="Required";setErr(e);return!Object.keys(e).length;};
+  return(
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 18px"}}>
+        <Fld label="Subject" req err={err.subject}><Inp value={f.subject} onChange={set("subject")} placeholder="Subject line"/></Fld>
+        <Fld label="Date Sent"><Inp type="date" value={f.sentDate} onChange={set("sentDate")}/></Fld>
+        <Fld label="Company" req err={err.toCompany}><Inp value={f.toCompany} onChange={set("toCompany")}/></Fld>
+        <Fld label="Contact Person"><Inp value={f.toContact} onChange={set("toContact")}/></Fld>
+        <Fld label="Email" req err={err.toEmail}><Inp type="email" value={f.toEmail} onChange={set("toEmail")}/></Fld>
+        <Fld label="Client Sector" req err={err.clientSector}><Sel value={f.clientSector} onChange={set("clientSector")}><option value="">Select</option>{SECTORS.map(s=><option key={s}>{s}</option>)}</Sel></Fld>
+        <Fld label="Status"><Sel value={f.status} onChange={set("status")}>{["Sent","Replied","No Response","Bounced","Converted"].map(s=><option key={s}>{s}</option>)}</Sel></Fld>
+      </div>
+      <Fld label="Email Body"><Txa value={f.body} onChange={set("body")} style={{minHeight:90}} placeholder="Paste or summarize..."/></Fld>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn v="gh" onClick={onClose}>Cancel</Btn><Btn onClick={()=>{if(ok())onSave(f);}} icon="ok">Save</Btn></div>
+    </div>
+  );
+}
+
+function UserMgmt({users,onSaveUsers,cu}){
+  const [editId,setEditId]=useState(null);const [isNew,setIsNew]=useState(false);const [showPwd,setShowPwd]=useState({});const [delId,setDelId]=useState(null);
+  const E={id:"",name:"",username:"",password:"",email:"",role:"sales"};
+  const [f,setF]=useState(E);const [err,setErr]=useState({});
+  const set=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const openEdit=u=>{setF({...u,password:""});setEditId(u.id);setIsNew(false);setErr({});};
+  const openNew=()=>{setF({...E,id:uid()});setIsNew(true);setEditId(null);setErr({});};
+  const cancel=()=>{setEditId(null);setIsNew(false);setF(E);setErr({});};
+  const validate=()=>{const e={};if(!f.name.trim())e.name="Required";if(!f.username.trim())e.username="Required";else if(users.some(u=>u.username===f.username&&u.id!==f.id))e.username="Already taken";if(isNew&&f.password.length<5)e.password="Min 5 chars";if(!f.email.includes("@"))e.email="Valid email";setErr(e);return!Object.keys(e).length;};
+  const save=()=>{if(!validate())return;let nu;if(isNew){nu=[...users,{...f}];}else{const pwd=f.password.trim()||users.find(u=>u.id===editId)?.password||"";nu=users.map(u=>u.id===editId?{...f,password:pwd,id:u.id}:u);}onSaveUsers(nu);cancel();};
+  const del=id=>{if(id===cu.id){alert("Cannot delete yourself.");return;}onSaveUsers(users.filter(u=>u.id!==id));setDelId(null);};
+  const show=editId||isNew;
+  return(
+    <div style={{display:"grid",gridTemplateColumns:show?"1fr 380px":"1fr",gap:20,alignItems:"start"}}>
+      <div>
+        <div style={{display:"flex",alignItems:"center",marginBottom:14}}><h3 style={{margin:0,fontFamily:"Georgia,serif",fontSize:18,color:P.tp}}>Team Members</h3><Btn sm icon="plus" onClick={openNew} style={{marginLeft:"auto"}}>Add User</Btn></div>
+        {users.map(u=>(
+          <div key={u.id} style={{background:P.card,border:`1.5px solid ${editId===u.id?P.acc+"88":P.bdr}`,borderRadius:12,padding:15,marginBottom:10,boxShadow:P.sh}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <Av name={u.name} sz={38}/>
+              <div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:800,fontSize:14,color:P.tp}}>{u.name}</span><Bdg label={u.role.toUpperCase()} color={u.role==="admin"?P.acc:P.inf} sm/>{u.id===cu.id&&<Bdg label="YOU" color={P.suc} sm/>}</div><div style={{fontSize:11,color:P.ts,marginTop:2}}>@{u.username} · {u.email}</div></div>
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>openEdit(u)} style={{background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:7,padding:"5px 10px",cursor:"pointer",color:P.ts,display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,fontFamily:"inherit"}}><Ic n="edit" s={11}/>Edit</button>
+                {u.id!==cu.id&&<button onClick={()=>setDelId(u.id)} style={{background:"#FEF2F2",border:`1.5px solid ${P.dan}44`,borderRadius:7,padding:"5px 10px",cursor:"pointer",color:P.dan,display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,fontFamily:"inherit"}}><Ic n="trash" s={11} c={P.dan}/>Del</button>}
+              </div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:7,padding:"8px 10px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`}}>
+              <Ic n="key" s={12} c={P.tm}/><span style={{fontSize:11,color:P.ts,fontWeight:600,width:64,flexShrink:0}}>Password:</span>
+              <span style={{fontSize:12,color:P.tp,fontFamily:"monospace",flex:1}}>{showPwd[u.id]?u.password:"•".repeat(Math.min(u.password?.length||8,8))}</span>
+              <button onClick={()=>setShowPwd(p=>({...p,[u.id]:!p[u.id]}))} style={{background:"none",border:"none",cursor:"pointer",display:"flex",padding:2}}><Ic n={showPwd[u.id]?"eoff":"eye"} s={13} c={P.tm}/></button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {show&&(
+        <div style={{background:P.card,border:`1.5px solid ${P.acc}55`,borderRadius:14,padding:22,boxShadow:P.sh,position:"sticky",top:20}}>
+          <h4 style={{margin:"0 0 16px",fontFamily:"Georgia,serif",fontSize:16,color:P.tp}}>{isNew?"Add New User":"Edit User"}</h4>
+          <Fld label="Full Name" req err={err.name}><Inp value={f.name} onChange={set("name")}/></Fld>
+          <Fld label="Username" req err={err.username} hint="Used to log in"><Inp value={f.username} onChange={set("username")} autoComplete="off"/></Fld>
+          <Fld label="Email" req err={err.email}><Inp type="email" value={f.email} onChange={set("email")}/></Fld>
+          <Fld label={isNew?"Password":"New Password"} err={err.password} hint={isNew?"Min 5 chars":"Blank = keep existing"}><Inp type="password" value={f.password} onChange={set("password")} autoComplete="new-password"/></Fld>
+          <Fld label="Role"><Sel value={f.role} onChange={set("role")}><option value="sales">Sales Representative</option><option value="admin">Admin</option></Sel></Fld>
+          <Div/>
+          <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn v="gh" onClick={cancel}>Cancel</Btn><Btn onClick={save} icon="ok">{isNew?"Create":"Save"}</Btn></div>
+        </div>
+      )}
+      {delId&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(26,39,68,0.38)",backdropFilter:"blur(4px)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{background:P.card,borderRadius:14,padding:24,maxWidth:360,width:"90%",boxShadow:"0 16px 40px rgba(26,39,68,0.2)"}}>
+            <h3 style={{margin:"0 0 8px",fontFamily:"Georgia,serif",color:P.tp}}>Delete User?</h3>
+            <p style={{margin:"0 0 18px",fontSize:13,color:P.ts}}>Permanently delete <strong>{users.find(u=>u.id===delId)?.name}</strong>?</p>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><Btn v="gh" onClick={()=>setDelId(null)}>Cancel</Btn><Btn v="dan" icon="trash" onClick={()=>del(delId)}>Delete</Btn></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KCard({lead,onClick,users}){
+  const u=users.find(x=>x.id===lead.assignedTo);
+  return(
+    <div onClick={onClick} style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:10,padding:12,cursor:"pointer",marginBottom:9,boxShadow:P.sh,transition:"all .18s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=P.acc+"88";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor=P.bdr;e.currentTarget.style.transform="none";}}>
+      <div style={{fontWeight:800,fontSize:13,color:P.tp,marginBottom:3}}>{lead.company}</div>
+      <div style={{fontSize:11,color:P.ts,marginBottom:7}}>{lead.contact}</div>
+      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:7}}><Bdg label={lead.clientSector} color={P.inf} sm/><Bdg label={lead.leadSource} color="#7C3AED" sm/></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        {u?<div style={{display:"flex",alignItems:"center",gap:4}}><Av name={u.name} sz={18}/><span style={{fontSize:10,color:P.ts,fontWeight:600}}>{u.name.split(" ")[0]}</span></div>:<span style={{fontSize:10,color:P.tm,fontStyle:"italic"}}>Unassigned</span>}
+        <span style={{fontSize:9,color:P.tm}}>{fd(lead.updatedAt||lead.createdAt)}</span>
+      </div>
+      {!!(lead.remarks||[]).length&&<div style={{marginTop:7,paddingTop:7,borderTop:`1px solid ${P.bdr}`,fontSize:10,color:P.tm,display:"flex",alignItems:"center",gap:3}}><Ic n="msg" s={10} c={P.tm}/>{lead.remarks.length} remark{lead.remarks.length!==1?"s":""}</div>}
+    </div>
+  );
+}
+
+function App(){
+  const DEFUSERS=[
+    {id:"admin",name:"Admin User",role:"admin",username:"admin",password:"admin123",email:"admin@company.com"},
+    {id:"u1",name:"Sarah Al-Rashid",role:"sales",username:"sarah",password:"pass123",email:"sarah@company.com"},
+    {id:"u2",name:"James Okafor",role:"sales",username:"james",password:"pass123",email:"james@company.com"},
+    {id:"u3",name:"Priya Menon",role:"sales",username:"priya",password:"pass123",email:"priya@company.com"},
+  ];
+  const [users,setUsers]=useState(DEFUSERS);
+  const [leads,setLeads]=useState([]);
+  const [emails,setEmails]=useState([]);
+  const [cu,setCu]=useState(null);
+  const [li,setLi]=useState(false);
+  const [view,setView]=useState("dash");
+  const [selLead,setSelLead]=useState(null);
+  const [selEmail,setSelEmail]=useState(null);
+  const [showLF,setShowLF]=useState(false);
+  const [showEF,setShowEF]=useState(false);
+  const [fsStage,setFsStage]=useState("All");
+  const [fsSect,setFsSect]=useState("All");
+  const [q,setQ]=useState("");
+  const [lview,setLview]=useState("kanban");
+  const [loading,setLoading]=useState(true);
+  const [saving,setSaving]=useState(false);
+  const [lastSync,setLastSync]=useState(null);
+  const [connErr,setConnErr]=useState(false);
+  const pollRef=useRef(null);
+  const saveTimer=useRef(null);
+
+  const loadData=useCallback(async(quiet=false)=>{
+    try{
+      const d=await gasGet();
+      if(d.users?.length)setUsers(d.users);
+      if(d.leads)setLeads(d.leads);
+      if(d.emails)setEmails(d.emails);
+      setLastSync(new Date());
+      setConnErr(false);
+    }catch(e){setConnErr(true);}
+    if(!quiet)setLoading(false);
+  },[]);
+
+  useEffect(()=>{loadData();},[]);
+  useEffect(()=>{
+    if(!li)return;
+    pollRef.current=setInterval(()=>loadData(true),20000);
+    return()=>clearInterval(pollRef.current);
+  },[li]);
+
+  const persist=useCallback((nl,ne,nu)=>{
+    clearTimeout(saveTimer.current);
+    setSaving(true);
+    saveTimer.current=setTimeout(async()=>{
+      try{await gasPost({leads:nl,emails:ne,users:nu});setLastSync(new Date());setConnErr(false);}
+      catch{setConnErr(true);}
+      setSaving(false);
+    },700);
+  },[]);
+
+  const saveUsers=nu=>{setUsers(nu);persist(leads,emails,nu);};
+  const addLead=d=>{const l={...d,id:uid(),stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:d.notes?.trim()?[{id:uid(),author:cu.name,authorId:cu.id,text:d.notes,date:new Date().toISOString(),channel:""}]:[]};const nl=[l,...leads];setLeads(nl);persist(nl,emails,users);setShowLF(false);};
+  const updLead=l=>{const nl=leads.map(x=>x.id===l.id?l:x);setLeads(nl);setSelLead(l);persist(nl,emails,users);};
+  const addEmail=d=>{const ne=[{...d,id:uid(),createdBy:cu.id,createdByName:cu.name,createdByRole:cu.role,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false},...emails];setEmails(ne);persist(leads,ne,users);setShowEF(false);};
+  const updEmail=e=>{const ne=emails.map(x=>x.id===e.id?e:x);setEmails(ne);setSelEmail(e);persist(leads,ne,users);};
+  const convert=log=>{const l={id:uid(),company:log.toCompany,contact:log.toContact||"",email:log.toEmail,mobile:"",businessType:"",leadSource:"Outbound Email",clientSector:log.clientSector,assignedTo:cu.id,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),fromEmailLog:true,remarks:[{id:uid(),author:cu.name,authorId:cu.id,text:`Converted from email: "${log.subject}"`,date:new Date().toISOString(),channel:"Email",sys:true}]};const nl=[l,...leads];const ne=emails.map(e=>e.id===log.id?{...log,converted:true,updatedAt:new Date().toISOString()}:e);setLeads(nl);setEmails(ne);persist(nl,ne,users);setSelEmail(null);setView("leads");};
+
+  useEffect(()=>{if(cu){const f=users.find(u=>u.id===cu.id);if(f&&f.name!==cu.name)setCu(f);}},[users]);
+
+  const fl=leads.filter(l=>{
+    if(fsStage!=="All"&&l.stage!==fsStage)return false;
+    if(fsSect!=="All"&&l.clientSector!==fsSect)return false;
+    if(q&&!`${l.company} ${l.contact} ${l.email}`.toLowerCase().includes(q.toLowerCase()))return false;
+    if(cu?.role!=="admin"&&l.assignedTo&&l.assignedTo!==cu?.id)return false;
+    return true;
+  });
+
+  if(loading)return(
+    <div style={{minHeight:"100vh",background:P.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,fontFamily:"'Segoe UI',sans-serif"}}>
+      <div style={{width:48,height:48,borderRadius:13,background:P.sb,display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n="gs" s={22} c={P.acc}/></div>
+      <div style={{fontSize:14,fontWeight:700,color:P.ts}}>Connecting to Google Sheets…</div>
+    </div>
+  );
+
+  if(!li)return <Login users={users} onLogin={u=>{setCu(u);setLi(true);}}/>;
+
+  const importLeadsCSV=nl=>{
+    const existing=new Set(leads.map(l=>l.email.toLowerCase()));
+    const fresh=nl.filter(l=>!existing.has(l.email.toLowerCase()));
+    if(!fresh.length){alert("No new leads to import — all emails already exist.");return;}
+    const merged=[...fresh,...leads];
+    setLeads(merged);persist(merged,emails,users);
+    alert(`✓ Imported ${fresh.length} new lead(s). ${nl.length-fresh.length} duplicate(s) skipped.`);
+  };
+  const importEmailsCSV=ne=>{
+    const existing=new Set(emails.map(e=>(e.toEmail+e.subject).toLowerCase()));
+    const fresh=ne.filter(e=>!existing.has((e.toEmail+e.subject).toLowerCase()));
+    if(!fresh.length){alert("No new emails to import — all already exist.");return;}
+    const merged=[...fresh,...emails];
+    setEmails(merged);persist(leads,merged,users);
+    alert(`✓ Imported ${fresh.length} new email(s). ${ne.length-fresh.length} duplicate(s) skipped.`);
+  };
+  const parseCSV=txt=>{
+    const lines=txt.split(/\r?\n/).filter(l=>l.trim());
+    return lines.slice(1).map(line=>{
+      const cols=[];let cur="",inQ=false;
+      for(const ch of line){if(ch==='"'){inQ=!inQ;}else if(ch===","&&!inQ){cols.push(cur.trim());cur="";}else{cur+=ch;}}
+      cols.push(cur.trim());
+      return cols.map(c=>c.replace(/^"|"$/g,"").trim());
+    }).filter(r=>r.some(c=>c));
+  };
+  const dlCSV=(s,name)=>{const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(s);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);};
+  const NAV=[{id:"dash",label:"Dashboard",icon:"bk"},{id:"leads",label:"Leads Pipeline",icon:"usr"},{id:"emails",label:"Email Log",icon:"em"},{id:"import",label:"Import Data",icon:"dl"},{id:"track",label:"Conversion Tracker",icon:"ch"},...(cu.role==="admin"?[{id:"users",label:"User Management",icon:"shd"}]:[])];
+  const ss=STAGES.map(s=>({stage:s,count:leads.filter(l=>l.stage===s).length}));
+
+  return(
+    <div style={{display:"flex",minHeight:"100vh",background:P.bg,fontFamily:"'Segoe UI',system-ui,sans-serif",color:P.tp}}>
+      <div style={{width:210,background:P.sb,display:"flex",flexDirection:"column",flexShrink:0,position:"sticky",top:0,height:"100vh"}}>
+        <div style={{padding:"20px 18px 14px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+          <div style={{fontSize:8,letterSpacing:"3px",color:P.acc,fontWeight:800,marginBottom:4,textTransform:"uppercase"}}>Sales Ops</div>
+          <div style={{fontSize:19,fontWeight:800,fontFamily:"Georgia,serif",color:"#fff",lineHeight:1.2}}>Lead Tracker</div>
+          <div style={{display:"flex",alignItems:"center",gap:5,marginTop:6,padding:"4px 8px",background:"rgba(5,150,105,0.15)",borderRadius:6,border:"1px solid rgba(5,150,105,0.3)"}}>
+            <Ic n="gs" s={10} c="#6EE7B7"/><span style={{fontSize:9,color:"#6EE7B7",fontWeight:700}}>Google Sheets Connected</span>
+          </div>
+        </div>
+        <nav style={{flex:1,padding:"10px 8px",overflowY:"auto"}}>
+          {NAV.map(item=>{const a=view===item.id;return(
+            <button key={item.id} onClick={()=>setView(item.id)} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:"9px 12px",borderRadius:8,border:"none",background:a?"rgba(201,150,42,0.18)":"transparent",color:a?P.acc:"rgba(255,255,255,0.5)",cursor:"pointer",fontSize:12,fontWeight:a?800:500,marginBottom:2,textAlign:"left",fontFamily:"inherit",borderLeft:`3px solid ${a?P.acc:"transparent"}`}}>
+              <Ic n={item.icon} s={14} c={a?P.acc:"rgba(255,255,255,0.35)"}/>{item.label}
+            </button>
+          );})}
+        </nav>
+        <div style={{padding:"12px 14px 16px",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <Av name={cu.name} sz={30}/>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:800,color:"rgba(255,255,255,0.9)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cu.name}</div><div style={{fontSize:9,color:P.acc,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px"}}>{cu.role}</div></div>
+          </div>
+          <button onClick={()=>{setCu(null);setLi(false);setView("dash");clearInterval(pollRef.current);}} style={{display:"flex",alignItems:"center",gap:7,width:"100%",padding:"7px 10px",background:"rgba(220,38,38,0.12)",border:"1px solid rgba(220,38,38,0.25)",borderRadius:7,color:"#FCA5A5",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit"}}>
+            <Ic n="out" s={12} c="#FCA5A5"/>Sign Out
+          </button>
+        </div>
+      </div>
+
+      <div style={{flex:1,overflowY:"auto",maxHeight:"100vh"}}>
+        <div style={{background:P.card,borderBottom:`1px solid ${P.bdr}`,padding:"8px 28px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:12,position:"sticky",top:0,zIndex:50}}>
+          {connErr&&<span style={{fontSize:11,color:P.dan,fontWeight:600}}>⚠ Connection error</span>}
+          <span style={{fontSize:11,color:saving?P.acc:P.suc,fontWeight:600}}>{saving?"⏳ Saving…":`✓ Synced ${lastSync?lastSync.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"—"}`}</span>
+          <Btn v="gh" sm icon="rf" onClick={()=>loadData(false)}>Refresh</Btn>
+        </div>
+
+        {view==="dash"&&(
+          <div style={{padding:"24px 28px"}}>
+            <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:24,fontWeight:800,color:P.tp}}>Good {new Date().getHours()<12?"Morning":"Afternoon"}, {cu.name.split(" ")[0]} 👋</h1>
+            <p style={{margin:"0 0 22px",color:P.ts,fontSize:13}}>{fd(new Date().toISOString())} · {leads.length} leads · {emails.length} emails · Google Sheets synced</p>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:22}}>
+              {[[leads.length,"Total Leads",P.acc,"usr"],[leads.filter(l=>!["Contract Sign Off","Lead Lost to Competitor","Lead Lost Out of Scope"].includes(l.stage)).length,"Active Pipeline",P.inf,"ar"],[leads.filter(l=>l.stage==="Contract Sign Off").length,"Signed Off",P.suc,"ok"],[emails.length,"Email Logs","#7C3AED","em"]].map(([v,l,c,i])=>(
+                <div key={l} style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:12,padding:"16px 18px",display:"flex",alignItems:"center",gap:13,boxShadow:P.sh}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:c+"15",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n={i} s={20} c={c}/></div>
+                  <div><div style={{fontSize:24,fontWeight:900,color:P.tp,lineHeight:1,fontFamily:"Georgia,serif"}}>{v}</div><div style={{fontSize:11,color:P.ts,marginTop:3,fontWeight:600}}>{l}</div></div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+              <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:13,padding:22,boxShadow:P.sh}}>
+                <h3 style={{margin:"0 0 16px",fontSize:14,color:P.tp,fontFamily:"Georgia,serif"}}>Stage Breakdown</h3>
+                {ss.map(({stage,count})=>(
+                  <div key={stage} style={{display:"flex",alignItems:"center",gap:9,marginBottom:9}}>
+                    <div style={{width:8,height:8,borderRadius:"50%",background:SC[stage],flexShrink:0}}/>
+                    <div style={{flex:1,fontSize:12,color:P.ts,fontWeight:600}}>{stage}</div>
+                    <div style={{width:80,height:6,background:P.bg,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${leads.length?(count/leads.length)*100:0}%`,background:SC[stage],borderRadius:3}}/></div>
+                    <div style={{width:20,fontSize:12,color:P.tp,textAlign:"right",fontWeight:800}}>{count}</div>
+                  </div>
+                ))}
+                {!leads.length&&<p style={{color:P.tm,fontSize:12,textAlign:"center",margin:"16px 0"}}>No leads yet.</p>}
+              </div>
+              <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:13,padding:22,boxShadow:P.sh}}>
+                <h3 style={{margin:"0 0 16px",fontSize:14,color:P.tp,fontFamily:"Georgia,serif"}}>Recent Activity</h3>
+                {[...leads,...emails].sort((a,b)=>new Date(b.updatedAt||b.createdAt)-new Date(a.updatedAt||a.createdAt)).slice(0,7).map(item=>(
+                  <div key={item.id} style={{display:"flex",alignItems:"center",gap:9,marginBottom:10,cursor:"pointer",padding:"5px 7px",borderRadius:7}} onClick={()=>{if(item.stage!==undefined){setSelLead(item);setView("leads");}else{setSelEmail(item);setView("emails");}}} onMouseEnter={e=>e.currentTarget.style.background=P.bg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <div style={{width:8,height:8,borderRadius:"50%",background:item.stage?SC[item.stage]||P.inf:"#7C3AED",flexShrink:0}}/>
+                    <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,color:P.tp,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.company||item.toCompany}</div><div style={{fontSize:10,color:P.tm}}>{item.stage?"Lead":"Email"} · {fd(item.updatedAt||item.createdAt)}</div></div>
+                    {item.stage&&<Bdg label={item.stage} color={SC[item.stage]||P.inf} sm/>}
+                  </div>
+                ))}
+                {!leads.length&&!emails.length&&<p style={{color:P.tm,fontSize:12,textAlign:"center",margin:"20px 0"}}>No activity yet.</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view==="leads"&&(
+          <div style={{padding:"24px 28px"}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:20,flexWrap:"wrap"}}>
+              <div><h1 style={{margin:0,fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Leads Pipeline</h1><p style={{margin:"3px 0 0",color:P.ts,fontSize:12}}>{fl.length} leads{cu.role!=="admin"?" assigned to you":""}</p></div>
+              <div style={{marginLeft:"auto",display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
+                <Inp placeholder="Search..." value={q} onChange={e=>setQ(e.target.value)} style={{width:160}}/>
+                <Sel value={fsSect} onChange={e=>setFsSect(e.target.value)} style={{width:"auto"}}><option value="All">All Sectors</option>{SECTORS.map(s=><option key={s}>{s}</option>)}</Sel>
+                <Sel value={fsStage} onChange={e=>setFsStage(e.target.value)} style={{width:"auto"}}><option value="All">All Stages</option>{STAGES.map(s=><option key={s}>{s}</option>)}</Sel>
+                <Btn v="gh" sm onClick={()=>setLview(v=>v==="kanban"?"list":"kanban")}>{lview==="kanban"?"List":"Kanban"}</Btn>
+                <Btn icon="plus" onClick={()=>setShowLF(true)}>New Lead</Btn>
+              </div>
+            </div>
+            {lview==="kanban"&&(<>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+                {STAGES.slice(0,4).map(stage=>{const sl=fl.filter(l=>(l.stage||"Opportunities")===stage);return(
+                  <div key={stage} style={{background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:12,padding:12}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12,paddingBottom:9,borderBottom:`2px solid ${SC[stage]}55`}}>
+                      <div style={{width:9,height:9,borderRadius:"50%",background:SC[stage]}}/><span style={{fontSize:9,fontWeight:800,color:SC[stage],flex:1}}>{stage.toUpperCase()}</span>
+                      <span style={{background:SC[stage],color:"#fff",borderRadius:9,padding:"1px 7px",fontSize:10,fontWeight:800}}>{sl.length}</span>
+                    </div>
+                    {sl.map(l=><KCard key={l.id} lead={l} users={users} onClick={()=>setSelLead(l)}/>)}
+                    {!sl.length&&<div style={{textAlign:"center",padding:14,color:P.tm,fontSize:11,fontStyle:"italic"}}>Empty</div>}
+                  </div>
+                );})}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginTop:12}}>
+                {STAGES.slice(4).map(stage=>{const sl=fl.filter(l=>(l.stage||"Opportunities")===stage);return(
+                  <div key={stage} style={{background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:12,padding:12}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12,paddingBottom:9,borderBottom:`2px solid ${SC[stage]}55`}}>
+                      <div style={{width:9,height:9,borderRadius:"50%",background:SC[stage]}}/><span style={{fontSize:9,fontWeight:800,color:SC[stage],flex:1}}>{stage.toUpperCase()}</span>
+                      <span style={{background:SC[stage],color:"#fff",borderRadius:9,padding:"1px 7px",fontSize:10,fontWeight:800}}>{sl.length}</span>
+                    </div>
+                    {sl.map(l=><KCard key={l.id} lead={l} users={users} onClick={()=>setSelLead(l)}/>)}
+                    {!sl.length&&<div style={{textAlign:"center",padding:14,color:P.tm,fontSize:11,fontStyle:"italic"}}>Empty</div>}
+                  </div>
+                );})}
+              </div>
+            </>)}
+            {lview==="list"&&(
+              <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:12,overflow:"hidden",boxShadow:P.sh}}>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1.5fr 1fr 1.5fr 1fr 0.8fr",padding:"10px 16px",borderBottom:`1.5px solid ${P.bdr}`,fontSize:9,color:P.tm,fontWeight:800,letterSpacing:"1px",textTransform:"uppercase",background:P.bg}}>
+                  <span>Company</span><span>Sector/Source</span><span>Stage</span><span>Assigned</span><span>Updated</span><span>Remarks</span>
+                </div>
+                {fl.map(l=>{const u=users.find(x=>x.id===l.assignedTo);return(
+                  <div key={l.id} onClick={()=>setSelLead(l)} style={{display:"grid",gridTemplateColumns:"2fr 1.5fr 1fr 1.5fr 1fr 0.8fr",padding:"11px 16px",borderBottom:`1px solid ${P.bdr}`,cursor:"pointer",alignItems:"center"}} onMouseEnter={e=>e.currentTarget.style.background=P.acl} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <div><div style={{fontWeight:800,fontSize:13,color:P.tp}}>{l.company}</div><div style={{fontSize:11,color:P.ts}}>{l.contact}</div></div>
+                    <div style={{display:"flex",flexDirection:"column",gap:3}}><Bdg label={l.clientSector} color={P.inf} sm/><Bdg label={l.leadSource} color="#7C3AED" sm/></div>
+                    <Bdg label={l.stage||"Opportunities"} color={SC[l.stage||"Opportunities"]} sm/>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}>{u?<><Av name={u.name} sz={18}/><span style={{fontSize:11,color:P.ts,fontWeight:600}}>{u.name}</span></>:<span style={{fontSize:11,color:P.tm,fontStyle:"italic"}}>Unassigned</span>}</div>
+                    <div style={{fontSize:11,color:P.ts}}>{fd(l.updatedAt||l.createdAt)}</div>
+                    <div style={{fontSize:11,color:P.tm,display:"flex",alignItems:"center",gap:3}}><Ic n="msg" s={10} c={P.tm}/>{(l.remarks||[]).length}</div>
+                  </div>
+                );})}
+                {!fl.length&&<div style={{textAlign:"center",padding:40,color:P.tm,fontSize:12}}>No leads match filters.</div>}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view==="emails"&&(
+          <div style={{padding:"24px 28px"}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:20}}>
+              <div><h1 style={{margin:0,fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Outbound Email Log</h1><p style={{margin:"3px 0 0",color:P.ts,fontSize:12}}>{emails.length} emails · {emails.filter(e=>e.converted).length} converted</p></div>
+              <Btn icon="plus" onClick={()=>setShowEF(true)} style={{marginLeft:"auto"}}>Log Email</Btn>
+            </div>
+            <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:12,overflow:"hidden",boxShadow:P.sh}}>
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr auto",padding:"10px 16px",borderBottom:`1.5px solid ${P.bdr}`,fontSize:9,color:P.tm,fontWeight:800,letterSpacing:"1px",textTransform:"uppercase",background:P.bg}}>
+                <span>Subject/Company</span><span>Contact</span><span>Sector</span><span>Date</span><span>Status</span><span>Action</span>
+              </div>
+              {emails.map(log=>{const sc={"Sent":P.inf,"Replied":P.suc,"No Response":P.acc,"Bounced":P.dan,"Converted":"#7C3AED"};return(
+                <div key={log.id} style={{display:"grid",gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr auto",padding:"11px 16px",borderBottom:`1px solid ${P.bdr}`,cursor:"pointer",alignItems:"center"}} onClick={()=>setSelEmail(log)} onMouseEnter={e=>e.currentTarget.style.background=P.acl} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <div><div style={{fontWeight:800,fontSize:13,color:P.tp}}>{log.subject}</div><div style={{fontSize:11,color:P.ts}}>{log.toCompany}</div></div>
+                  <div><div style={{fontSize:11,color:P.ts,fontWeight:600}}>{log.toContact||"—"}</div><div style={{fontSize:10,color:P.tm}}>{log.toEmail}</div></div>
+                  <Bdg label={log.clientSector} color={P.inf} sm/>
+                  <div style={{fontSize:11,color:P.ts}}>{fd(log.sentDate)}</div>
+                  <Bdg label={log.status} color={sc[log.status]||"#6B7280"} sm/>
+                  <div onClick={e=>e.stopPropagation()}>{!log.converted?<Btn v="suc" sm icon="cvt" onClick={()=>convert(log)}>Convert</Btn>:<Bdg label="✓ Lead" color={P.suc} sm/>}</div>
+                </div>
+              );})}
+              {!emails.length&&<div style={{textAlign:"center",padding:50,color:P.tm,fontSize:12}}>No emails logged yet.</div>}
+            </div>
+          </div>
+        )}
+
+        {view==="import"&&(
+          <div style={{padding:"24px 28px"}}>
+            <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Import Data</h1>
+            <p style={{margin:"0 0 22px",color:P.ts,fontSize:12}}>Upload CSV files to add new leads or emails. Existing records are never overwritten or deleted.</p>
+            <div style={{padding:"10px 14px",background:"#F0FDF4",border:"1.5px solid #86EFAC",borderRadius:10,marginBottom:24,fontSize:12,color:P.suc,fontWeight:600,display:"flex",gap:8,alignItems:"center"}}>
+              <Ic n="ok" s={14} c={P.suc}/>Safe import — duplicates are automatically skipped. Your existing data stays intact.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+              {/* Leads Import */}
+              <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:14,padding:22,boxShadow:P.sh}}>
+                <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14}}>
+                  <div style={{width:36,height:36,borderRadius:9,background:P.inf+"15",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n="usr" s={18} c={P.inf}/></div>
+                  <div><div style={{fontWeight:800,fontSize:14,color:P.tp}}>Import Leads</div><div style={{fontSize:11,color:P.tm}}>CSV with lead details</div></div>
+                </div>
+                <div style={{fontSize:11,color:P.ts,marginBottom:14,lineHeight:1.6,background:P.bg,padding:"10px 12px",borderRadius:8,border:`1px solid ${P.bdr}`}}>
+                  <strong>Required columns:</strong> Company, Contact, Email<br/>
+                  <strong>Optional:</strong> Mobile, Business Type, Lead Source, Sector, Assigned To
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <button onClick={()=>dlCSV("Company,Contact Person,Email,Mobile,Business Type,Lead Source,Client Sector,Assigned To\nAcme Corp,John Smith,john@acme.com,+971501234567,B2B,LinkedIn,Hotels,\n","leads_template.csv")}
+                    style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:P.ts,fontFamily:"inherit"}}>
+                    <Ic n="dl" s={13} c={P.ts}/>Download Template
+                  </button>
+                  <label style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:`linear-gradient(135deg,${P.inf},#3B82F6)`,border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:"#fff",fontFamily:"inherit"}}>
+                    <Ic n="dl" s={13} c="#fff"/>Upload Leads CSV
+                    <input type="file" accept=".csv" style={{display:"none"}} onChange={e=>{
+                      const f=e.target.files[0];if(!f)return;
+                      const r=new FileReader();r.onload=ev=>{
+                        try{
+                          const rows=parseCSV(ev.target.result);
+                          const nl=rows.map(cols=>{
+                            const [company="",contact="",email="",mobile="",businessType="",leadSource="",clientSector="",assignedTo=""]=cols;
+                            if(!company||!email||!email.includes("@"))return null;
+                            return{id:uid(),company,contact,email,mobile,businessType,leadSource,clientSector,assignedTo,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[]};
+                          }).filter(Boolean);
+                          importLeadsCSV(nl);
+                        }catch{alert("Error reading CSV. Please check the format.");}
+                      };r.readAsText(f);e.target.value="";
+                    }}/>
+                  </label>
+                </div>
+                <div style={{marginTop:14,padding:"8px 12px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`,fontSize:11,color:P.tm}}>
+                  Currently <strong style={{color:P.tp}}>{leads.length}</strong> leads in system
+                </div>
+              </div>
+              {/* Emails Import */}
+              <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:14,padding:22,boxShadow:P.sh}}>
+                <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14}}>
+                  <div style={{width:36,height:36,borderRadius:9,background:"#7C3AED15",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n="em" s={18} c="#7C3AED"/></div>
+                  <div><div style={{fontWeight:800,fontSize:14,color:P.tp}}>Import Email Log</div><div style={{fontSize:11,color:P.tm}}>CSV with outbound emails</div></div>
+                </div>
+                <div style={{fontSize:11,color:P.ts,marginBottom:14,lineHeight:1.6,background:P.bg,padding:"10px 12px",borderRadius:8,border:`1px solid ${P.bdr}`}}>
+                  <strong>Required columns:</strong> Subject, Company, Email, Sector<br/>
+                  <strong>Optional:</strong> Contact, Date Sent, Status, Body
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <button onClick={()=>dlCSV("Subject,Company,Contact Person,Email,Client Sector,Date Sent,Status,Body\nIntro Email,Acme Corp,John Smith,john@acme.com,Hotels,2026-04-07,Sent,\n","emails_template.csv")}
+                    style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:P.ts,fontFamily:"inherit"}}>
+                    <Ic n="dl" s={13} c={P.ts}/>Download Template
+                  </button>
+                  <label style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:"linear-gradient(135deg,#7C3AED,#9333EA)",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:"#fff",fontFamily:"inherit"}}>
+                    <Ic n="dl" s={13} c="#fff"/>Upload Emails CSV
+                    <input type="file" accept=".csv" style={{display:"none"}} onChange={e=>{
+                      const f=e.target.files[0];if(!f)return;
+                      const r=new FileReader();r.onload=ev=>{
+                        try{
+                          const rows=parseCSV(ev.target.result);
+                          const ne=rows.map(cols=>{
+                            const [subject="",toCompany="",toContact="",toEmail="",clientSector="",sentDate="",status="Sent",body=""]=cols;
+                            if(!subject||!toEmail||!toEmail.includes("@"))return null;
+                            return{id:uid(),subject,toCompany,toContact,toEmail,clientSector,sentDate:sentDate||new Date().toISOString().slice(0,10),status:status||"Sent",body,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false};
+                          }).filter(Boolean);
+                          importEmailsCSV(ne);
+                        }catch{alert("Error reading CSV. Please check the format.");}
+                      };r.readAsText(f);e.target.value="";
+                    }}/>
+                  </label>
+                </div>
+                <div style={{marginTop:14,padding:"8px 12px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`,fontSize:11,color:P.tm}}>
+                  Currently <strong style={{color:P.tp}}>{emails.length}</strong> emails in system
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {view==="track"&&(
+          <div style={{padding:"24px 28px"}}>
+            <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Conversion Tracker</h1>
+            <p style={{margin:"0 0 22px",color:P.ts,fontSize:12}}>Email → pipeline analytics</p>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:20}}>
+              {[[emails.length,"Outbound Emails",P.inf,"em"],[emails.filter(e=>e.converted).length,"Converted",P.suc,"ok"],[emails.length?Math.round((emails.filter(e=>e.converted).length/emails.length)*100)+"%":"0%","Conversion Rate",P.acc,"ch"]].map(([v,l,c,i])=>(
+                <div key={l} style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:12,padding:"16px 18px",display:"flex",alignItems:"center",gap:13,boxShadow:P.sh}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:c+"15",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n={i} s={20} c={c}/></div>
+                  <div><div style={{fontSize:24,fontWeight:900,color:P.tp,fontFamily:"Georgia,serif",lineHeight:1}}>{v}</div><div style={{fontSize:11,color:P.ts,marginTop:3,fontWeight:600}}>{l}</div></div>
+                </div>
+              ))}
+            </div>
+            <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:13,padding:22,boxShadow:P.sh}}>
+              <h3 style={{margin:"0 0 18px",fontSize:14,color:P.tp,fontFamily:"Georgia,serif"}}>Pipeline by Stage</h3>
+              {STAGES.map(s=>{const cnt=leads.filter(l=>l.stage===s).length;const mx=Math.max(...STAGES.map(st=>leads.filter(l=>l.stage===st).length),1);return(
+                <div key={s} style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+                  <div style={{width:160,fontSize:11,color:P.ts,fontWeight:600,flexShrink:0}}>{s}</div>
+                  <div style={{flex:1,height:9,background:P.bg,borderRadius:4,overflow:"hidden",border:`1px solid ${P.bdr}`}}><div style={{height:"100%",width:`${(cnt/mx)*100}%`,background:SC[s],borderRadius:4,transition:"width .7s"}}/></div>
+                  <div style={{fontSize:12,color:P.tp,width:20,textAlign:"right",fontWeight:800}}>{cnt}</div>
+                </div>
+              );})}
+            </div>
+          </div>
+        )}
+
+        {view==="users"&&cu.role==="admin"&&(
+          <div style={{padding:"24px 28px"}}>
+            <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>User Management</h1>
+            <p style={{margin:"0 0 16px",color:P.ts,fontSize:12}}>{users.length} team members · Saved to Google Sheets</p>
+            <div style={{padding:"10px 14px",background:"#EFF6FF",border:`1.5px solid ${P.inf}33`,borderRadius:10,marginBottom:20,fontSize:12,color:P.inf,fontWeight:600,display:"flex",gap:8,alignItems:"center"}}><Ic n="shd" s={14} c={P.inf}/>Users added here are saved to Google Sheets and work on all devices immediately.</div>
+            <UserMgmt users={users} onSaveUsers={saveUsers} cu={cu}/>
+          </div>
+        )}
+      </div>
+
+      {showLF&&<Mdl title="Add New Lead" onClose={()=>setShowLF(false)} wide><LeadForm users={users} onClose={()=>setShowLF(false)} onSave={addLead}/></Mdl>}
+      {showEF&&<Mdl title="Log Outbound Email" onClose={()=>setShowEF(false)} wide><EmailLogForm onClose={()=>setShowEF(false)} onSave={addEmail}/></Mdl>}
+      {selLead&&<LeadDetail lead={selLead} onClose={()=>setSelLead(null)} onUpdate={updLead} cu={cu} users={users}/>}
+      {selEmail&&(
+        <Mdl title={selEmail.subject} subtitle={`${selEmail.toCompany} · ${selEmail.toEmail}`} onClose={()=>setSelEmail(null)} wide>
+          <div style={{display:"flex",gap:7,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+            <Bdg label={selEmail.status} color={{"Sent":P.inf,"Replied":P.suc,"No Response":P.acc,"Bounced":P.dan,"Converted":"#7C3AED"}[selEmail.status]||"#6B7280"}/>
+            <Bdg label={selEmail.clientSector} color={P.inf}/>
+            <span style={{marginLeft:"auto"}}>{!selEmail.converted?<Btn v="suc" sm icon="cvt" onClick={()=>convert(selEmail)}>Convert to Lead</Btn>:<Bdg label="✓ Converted" color={P.suc}/>}</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 24px"}}>
+            {[["Company",selEmail.toCompany],["Contact",selEmail.toContact||"—"],["Email",selEmail.toEmail],["Sector",selEmail.clientSector],["Date Sent",fd(selEmail.sentDate)],["Status",selEmail.status]].map(([k,v])=>(
+              <div key={k} style={{marginBottom:13}}><div style={{fontSize:10,color:P.tm,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:2}}>{k}</div><div style={{fontSize:13,color:P.tp,fontWeight:500}}>{v}</div></div>
+            ))}
+            {selEmail.body&&<div style={{gridColumn:"1/-1"}}><div style={{fontSize:10,color:P.tm,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:5}}>Body</div><div style={{background:P.bg,border:`1px solid ${P.bdr}`,borderRadius:8,padding:12,fontSize:12,color:P.ts,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{selEmail.body}</div></div>}
+          </div>
+          <Div/>
+          <Remarks remarks={selEmail.remarks}/>
+          <RemarkBox onAdd={r=>updEmail({...selEmail,remarks:[...(selEmail.remarks||[]),r],updatedAt:new Date().toISOString()})} cu={cu}/>
+        </Mdl>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
