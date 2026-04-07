@@ -25,7 +25,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbxZkF5AL0xrhyKNKltPs_EmrZAWrtd1NGj9stqyF3QAQEBY-bpz2f9odRERGDfTEkvcxQ/exec";
+const GAS="https://script.google.com/macros/s/AKfycbxXvwXpac_WV31arulw7qlDH0-m9oW1UXVhMl7ZTJYAYM1ssI4IBk3UX0ZzesNlmhJj-w/exec";
 
 const gasGet=()=>fetch(GAS).then(r=>r.json());
 const gasPost=d=>fetch(GAS,{method:"POST",body:JSON.stringify(d)});
