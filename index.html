@@ -25,9 +25,16 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbxXvwXpac_WV31arulw7qlDH0-m9oW1UXVhMl7ZTJYAYM1ssI4IBk3UX0ZzesNlmhJj-w/exec";
+const GAS="https://script.google.com/macros/s/AKfycbz5DIDJW7jTPg8Ky3AWAxLsjSwYFtw0Yx1pcx3pHLUZdUz18CIz796SXIgupfJZVdZR/exec";
 
-const gasGet=()=>fetch(GAS).then(r=>r.json());
+const gasGet=()=>new Promise((res,rej)=>{
+  const cb="cb_"+Date.now();
+  const s=document.createElement("script");
+  s.src=GAS+"?callback="+cb;
+  window[cb]=d=>{res(d);delete window[cb];document.body.removeChild(s);};
+  s.onerror=rej;
+  document.body.appendChild(s);
+});
 const gasPost=d=>fetch(GAS,{method:"POST",body:JSON.stringify(d)});
 
 const LS=["Inbound Email","Outbound Email","Word of Mouth","LinkedIn","Direct Marketing","Email Marketing","Former Clients","Driver Referrals"];
