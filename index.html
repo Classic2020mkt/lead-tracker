@@ -25,7 +25,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbwFMmrxQjquq-RD7dx0_Fb5yLNmUGqwKy5gm2X5mFbAW3UGVZE6tR9TqBUn0i72Rvo3/exec";
+const GAS="https://script.google.com/macros/s/AKfycbxeKkHTDDA3b5c6AuarXpbW1_f0p4eyBGIwlqQUXjlq0X8QfuT4BtQfdLiB7b75sa_4/exec";
 
 const gasGet=()=>new Promise((res,rej)=>{
   const cb="cb_"+Date.now();
@@ -374,6 +374,7 @@ function App(){
   const saveTimer=useRef(null);
 
   const loadData=useCallback(async(quiet=false)=>{
+    if(saving) return; // Never reload while saving
     try{
       const d=await gasGet();
       if(d.users?.length)setUsers(d.users);
@@ -383,32 +384,34 @@ function App(){
       setConnErr(false);
     }catch(e){setConnErr(true);}
     if(!quiet)setLoading(false);
-  },[]);
+  },[saving]);
 
   useEffect(()=>{loadData();},[]);
+
   useEffect(()=>{
     if(!li)return;
     pollRef.current=setInterval(()=>{
       if(!saving) loadData(true);
-    },30000);
+    },60000); // Poll every 60 seconds only
     return()=>clearInterval(pollRef.current);
   },[li,saving]);
 
   const persist=useCallback((nl,ne,nu)=>{
     clearTimeout(saveTimer.current);
     setSaving(true);
+    // Update local state immediately
+    setLeads(nl);
+    setEmails(ne);
+    setUsers(nu);
     saveTimer.current=setTimeout(async()=>{
       try{
         await gasPost({leads:nl,emails:ne,users:nu});
         setLastSync(new Date());
         setConnErr(false);
-        // Reload after successful save to confirm data
-        setTimeout(()=>loadData(true),2000);
-      }
-      catch{setConnErr(true);}
-      setSaving(false);
-    },700);
-  },[loadData]);
+      }catch{setConnErr(true);}
+      finally{setSaving(false);}
+    },500);
+  },[]);
 
   const saveUsers=nu=>{setUsers(nu);persist(leads,emails,nu);};
   const addLead=d=>{const l={...d,id:uid(),stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:d.notes?.trim()?[{id:uid(),author:cu.name,authorId:cu.id,text:d.notes,date:new Date().toISOString(),channel:""}]:[]};const nl=[l,...leads];setLeads(nl);persist(nl,emails,users);setShowLF(false);};
@@ -434,7 +437,20 @@ function App(){
     </div>
   );
 
-  if(!li)return <Login users={users} onLogin={u=>{setCu(u);setLi(true);}}/>;
+  if(!li)return <Login users={users} onLogin={u=>{
+    setCu(u);
+    setLi(true);
+    // Log user login to Google Sheet
+    gasPost({
+      leads,emails,users,
+      loginLog:{
+        userId:u.id,
+        userName:u.name,
+        userRole:u.role,
+        loginTime:new Date().toISOString()
+      }
+    });
+  }}/>;
 
   const importLeadsCSV=nl=>{
     const existing=new Set(leads.map(l=>l.email.toLowerCase()));
