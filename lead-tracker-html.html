@@ -25,7 +25,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbwFMmrxQjquq-RD7dx0_Fb5yLNmUGqwKy5gm2X5mFbAW3UGVZE6tR9TqBUn0i72Rvo3/exec";
+const GAS="https://script.google.com/macros/s/AKfycbxeKkHTDDA3b5c6AuarXpbW1_f0p4eyBGIwlqQUXjlq0X8QfuT4BtQfdLiB7b75sa_4/exec";
 
 const gasGet=()=>new Promise((res,rej)=>{
   const cb="cb_"+Date.now();
@@ -350,6 +350,7 @@ function App(){
     {id:"u1",name:"Sarah Al-Rashid",role:"sales",username:"sarah",password:"pass123",email:"sarah@company.com"},
     {id:"u2",name:"James Okafor",role:"sales",username:"james",password:"pass123",email:"james@company.com"},
     {id:"u3",name:"Priya Menon",role:"sales",username:"priya",password:"pass123",email:"priya@company.com"},
+    {id:"u4",name:"Zainah Haji",role:"sales",username:"Zainabh",password:"clt123",email:"zainabh@company.com"},
   ];
   const [users,setUsers]=useState(DEFUSERS);
   const [leads,setLeads]=useState([]);
@@ -373,6 +374,7 @@ function App(){
   const saveTimer=useRef(null);
 
   const loadData=useCallback(async(quiet=false)=>{
+    if(saving) return; // Never reload while saving
     try{
       const d=await gasGet();
       if(d.users?.length)setUsers(d.users);
@@ -382,23 +384,27 @@ function App(){
       setConnErr(false);
     }catch(e){setConnErr(true);}
     if(!quiet)setLoading(false);
-  },[]);
+  },[saving]);
 
   useEffect(()=>{loadData();},[]);
-  useEffect(()=>{
-    if(!li)return;
-    pollRef.current=setInterval(()=>loadData(true),20000);
-    return()=>clearInterval(pollRef.current);
-  },[li]);
+
+  // No auto polling — data loads on login and manual Refresh only
 
   const persist=useCallback((nl,ne,nu)=>{
     clearTimeout(saveTimer.current);
     setSaving(true);
+    // Update local state immediately
+    setLeads(nl);
+    setEmails(ne);
+    setUsers(nu);
     saveTimer.current=setTimeout(async()=>{
-      try{await gasPost({leads:nl,emails:ne,users:nu});setLastSync(new Date());setConnErr(false);}
-      catch{setConnErr(true);}
-      setSaving(false);
-    },700);
+      try{
+        await gasPost({leads:nl,emails:ne,users:nu});
+        setLastSync(new Date());
+        setConnErr(false);
+      }catch{setConnErr(true);}
+      finally{setSaving(false);}
+    },500);
   },[]);
 
   const saveUsers=nu=>{setUsers(nu);persist(leads,emails,nu);};
@@ -425,7 +431,20 @@ function App(){
     </div>
   );
 
-  if(!li)return <Login users={users} onLogin={u=>{setCu(u);setLi(true);}}/>;
+  if(!li)return <Login users={users} onLogin={u=>{
+    setCu(u);
+    setLi(true);
+    // Log user login to Google Sheet
+    gasPost({
+      leads,emails,users,
+      loginLog:{
+        userId:u.id,
+        userName:u.name,
+        userRole:u.role,
+        loginTime:new Date().toISOString()
+      }
+    });
+  }}/>;
 
   const importLeadsCSV=nl=>{
     const existing=new Set(leads.map(l=>l.email.toLowerCase()));
