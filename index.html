@@ -350,6 +350,7 @@ function App(){
     {id:"u1",name:"Sarah Al-Rashid",role:"sales",username:"sarah",password:"pass123",email:"sarah@company.com"},
     {id:"u2",name:"James Okafor",role:"sales",username:"james",password:"pass123",email:"james@company.com"},
     {id:"u3",name:"Priya Menon",role:"sales",username:"priya",password:"pass123",email:"priya@company.com"},
+    {id:"u4",name:"Zainah Haji",role:"sales",username:"Zainabh",password:"clt123",email:"zainabh@company.com"},
   ];
   const [users,setUsers]=useState(DEFUSERS);
   const [leads,setLeads]=useState([]);
@@ -387,19 +388,27 @@ function App(){
   useEffect(()=>{loadData();},[]);
   useEffect(()=>{
     if(!li)return;
-    pollRef.current=setInterval(()=>loadData(true),20000);
+    pollRef.current=setInterval(()=>{
+      if(!saving) loadData(true);
+    },30000);
     return()=>clearInterval(pollRef.current);
-  },[li]);
+  },[li,saving]);
 
   const persist=useCallback((nl,ne,nu)=>{
     clearTimeout(saveTimer.current);
     setSaving(true);
     saveTimer.current=setTimeout(async()=>{
-      try{await gasPost({leads:nl,emails:ne,users:nu});setLastSync(new Date());setConnErr(false);}
+      try{
+        await gasPost({leads:nl,emails:ne,users:nu});
+        setLastSync(new Date());
+        setConnErr(false);
+        // Reload after successful save to confirm data
+        setTimeout(()=>loadData(true),2000);
+      }
       catch{setConnErr(true);}
       setSaving(false);
     },700);
-  },[]);
+  },[loadData]);
 
   const saveUsers=nu=>{setUsers(nu);persist(leads,emails,nu);};
   const addLead=d=>{const l={...d,id:uid(),stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:d.notes?.trim()?[{id:uid(),author:cu.name,authorId:cu.id,text:d.notes,date:new Date().toISOString(),channel:""}]:[]};const nl=[l,...leads];setLeads(nl);persist(nl,emails,users);setShowLF(false);};
