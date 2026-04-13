@@ -388,13 +388,7 @@ function App(){
 
   useEffect(()=>{loadData();},[]);
 
-  useEffect(()=>{
-    if(!li)return;
-    pollRef.current=setInterval(()=>{
-      if(!saving) loadData(true);
-    },60000); // Poll every 60 seconds only
-    return()=>clearInterval(pollRef.current);
-  },[li,saving]);
+  // No auto polling — data loads on login and manual Refresh only
 
   const persist=useCallback((nl,ne,nu)=>{
     clearTimeout(saveTimer.current);
