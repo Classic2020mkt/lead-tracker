@@ -23,7 +23,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbz72mXZ5wGqLQkLGKgXmSb-kGaZlNf5wmsGqaFZdYgEM_PalDTUW96-KKsR0CLVGU2c/exec";
+const GAS="https://script.google.com/macros/s/AKfycbwfA-vnD1cNr56vamnTev4ESg7oEbQcuX-JW1zEa_ujU0FW_CKZe_2H3sB3tYj-KWau/exec";
 
 const gasGet=()=>new Promise((res,rej)=>{
   const cb="cb_"+Date.now();
@@ -33,7 +33,17 @@ const gasGet=()=>new Promise((res,rej)=>{
   s.onerror=rej;
   document.body.appendChild(s);
 });
-const gasPost=d=>fetch(GAS,{method:"POST",body:JSON.stringify(d)});
+
+const gasPost=d=>new Promise((res,rej)=>{
+  const cb="cb_"+Date.now();
+  const s=document.createElement("script");
+  // Encode data as URL parameter for JSONP POST workaround
+  const encoded=encodeURIComponent(JSON.stringify(d));
+  s.src=GAS+"?callback="+cb+"&method=post&data="+encoded;
+  window[cb]=r=>{res(r);delete window[cb];document.body.removeChild(s);};
+  s.onerror=rej;
+  document.body.appendChild(s);
+});
 
 const DEFUSERS=[
   {id:"admin",name:"Munawar Haris",role:"admin",username:"Munawar",password:"clt123",email:"marketing@cltdxb.com"},
@@ -399,18 +409,24 @@ function App(){
   const updLead=l=>{const nl=leads.map(x=>x.id===l.id?l:x);setSelLead(l);persist(nl,emails,users);};
   const addEmail=d=>{const ne=[{...d,id:uid(),createdBy:cu.id,createdByName:cu.name,createdByRole:cu.role,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false},...emails];persist(leads,ne,users);setShowEF(false);};
   const updEmail=e=>{const ne=emails.map(x=>x.id===e.id?e:x);setSelEmail(e);persist(leads,ne,users);};
-  const convert=log=>{
+  const convert=async(log)=>{
     const l={id:uid(),company:log.toCompany,contact:log.toContact||"",email:log.toEmail,mobile:"",businessType:"",leadSource:"Outbound Email",clientSector:log.clientSector,assignedTo:cu.id,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),fromEmailLog:true,remarks:[{id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:`Converted from email: "${log.subject}"`,date:new Date().toISOString(),channel:"Email",sys:true}]};
     const updatedLog={...log,converted:true,updatedAt:new Date().toISOString()};
     const nl=[l,...leads];
     const ne=emails.map(e=>e.id===log.id?updatedLog:e);
-    // Update state first
+    // Save to Google Sheets FIRST
+    setSaving(true);
+    try{
+      await gasPost({leads:nl,emails:ne,users});
+      setLastSync(new Date());
+      setConnErr(false);
+    }catch{setConnErr(true);}
+    setSaving(false);
+    // Then update local state
     setLeads(nl);
     setEmails(ne);
     setSelEmail(null);
     setView("leads");
-    // Then save — with slight delay to ensure state is set
-    setTimeout(()=>persist(nl,ne,users),100);
   };
 
   const importLeadsCSV=nl=>{const existing=new Set(leads.map(l=>l.email.toLowerCase()));const fresh=nl.filter(l=>!existing.has(l.email.toLowerCase()));if(!fresh.length){alert("No new leads — all emails already exist.");return;}const merged=[...fresh,...leads];persist(merged,emails,users);alert(`✓ Imported ${fresh.length} new lead(s). ${nl.length-fresh.length} duplicate(s) skipped.`);};
@@ -474,7 +490,7 @@ function App(){
         <div style={{background:P.card,borderBottom:`1px solid ${P.bdr}`,padding:"8px 28px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:12,position:"sticky",top:0,zIndex:50}}>
           {connErr&&<span style={{fontSize:11,color:P.dan,fontWeight:600}}>⚠ Connection error</span>}
           <span style={{fontSize:11,color:saving?P.acc:P.suc,fontWeight:600}}>{saving?"⏳ Saving…":`✓ Synced ${lastSync?lastSync.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"—"}`}</span>
-          <Btn v="gh" sm icon="rf" onClick={()=>loadData(false)}>Refresh</Btn>
+          <Btn v="gh" sm icon="rf" disabled={saving} onClick={()=>loadData(false)}>Refresh</Btn>
         </div>
 
         {view==="dash"&&(
