@@ -16,8 +16,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;}
 select option{background:#fff;color:#1A2744;}
 @keyframes shk{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}
 .shk{animation:shk .4s ease}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spin{animation:spin 1s linear infinite}
 </style>
 </head>
 <body>
@@ -25,7 +23,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbxeKkHTDDA3b5c6AuarXpbW1_f0p4eyBGIwlqQUXjlq0X8QfuT4BtQfdLiB7b75sa_4/exec";
+const GAS="https://script.google.com/macros/s/AKfycbz72mXZ5wGqLQkLGKgXmSb-kGaZlNf5wmsGqaFZdYgEM_PalDTUW96-KKsR0CLVGU2c/exec";
 
 const gasGet=()=>new Promise((res,rej)=>{
   const cb="cb_"+Date.now();
@@ -36,6 +34,15 @@ const gasGet=()=>new Promise((res,rej)=>{
   document.body.appendChild(s);
 });
 const gasPost=d=>fetch(GAS,{method:"POST",body:JSON.stringify(d)});
+
+const DEFUSERS=[
+  {id:"admin",name:"Munawar Haris",role:"admin",username:"Munawar",password:"clt123",email:"marketing@cltdxb.com"},
+  {id:"u1",name:"Masood Bawazeer",role:"sales",username:"Masood",password:"clt123",email:"Masood@cltdxb.com"},
+  {id:"u2",name:"Abdullah Katheri",role:"sales",username:"Abdullah",password:"clt123",email:"corporate@cltdxb.com"},
+  {id:"u3",name:"Zainab Haji",role:"sales",username:"Zainabh",password:"clt123",email:"zainab@cltdxb.com"},
+  {id:"u4",name:"Mahra Saeed",role:"sales",username:"Mahra",password:"clt123",email:"mahra.saeed@cltdxb.com"},
+  {id:"u5",name:"Dana",role:"sales",username:"Dana",password:"clt123",email:"Sales@cltad.com"},
+];
 
 const LS=["Inbound Email","Outbound Email","Word of Mouth","LinkedIn","Direct Marketing","Email Marketing","Former Clients","Driver Referrals"];
 const STAGES=["Opportunities","Proposal","Negotiation","Gone Silent","Lead Lost to Competitor","Lead Lost Out of Scope","Contract Sign Off"];
@@ -104,7 +111,12 @@ const Ic=({n,s=16,c="currentColor"})=>{
 
 function Login({users,onLogin}){
   const [u,setU]=useState("");const [p,setP]=useState("");const [sp,setSp]=useState(false);const [err,setErr]=useState("");const [shk,setShk]=useState(false);
-  const go=()=>{const usr=users.find(x=>x.username.toLowerCase()===u.trim().toLowerCase());if(!usr){setErr("Username not found.");setShk(true);setTimeout(()=>setShk(false),500);return;}if(usr.password!==p){setErr("Incorrect password.");setShk(true);setTimeout(()=>setShk(false),500);return;}onLogin(usr);};
+  const go=()=>{
+    const usr=users.find(x=>x.username.toLowerCase()===u.trim().toLowerCase());
+    if(!usr){setErr("Username not found.");setShk(true);setTimeout(()=>setShk(false),500);return;}
+    if(usr.password!==p){setErr("Incorrect password.");setShk(true);setTimeout(()=>setShk(false),500);return;}
+    onLogin(usr);
+  };
   return(
     <div style={{minHeight:"100vh",background:P.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{width:"100%",maxWidth:420}}>
@@ -121,7 +133,6 @@ function Login({users,onLogin}){
           </Fld>
           {err&&<div style={{padding:"8px 12px",borderRadius:7,background:P.dan+"10",border:`1.5px solid ${P.dan}33`,fontSize:12,color:P.dan,fontWeight:600,marginBottom:14}}>{err}</div>}
           <button onClick={go} style={{width:"100%",padding:11,background:`linear-gradient(135deg,${P.acc},#E2AA2E)`,color:"#fff",border:"none",borderRadius:9,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Sign In →</button>
-
         </div>
       </div>
     </div>
@@ -133,7 +144,6 @@ function RemarkBox({onAdd,cu}){
   const gc=(t,d)=>{const dt=new Date(d||Date.now());dt.setDate(dt.getDate()+1);const s=dt.toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";const e=new Date(dt.getTime()+3600000).toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}&dates=${s}/${e}`;};
   return(
     <div style={{background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:10,padding:13,marginTop:12}}>
-      {/* Show who is adding the remark */}
       <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8,padding:"6px 10px",background:P.acl,borderRadius:7,border:`1px solid ${P.acc}33`}}>
         <Av name={cu.name} sz={20}/>
         <span style={{fontSize:11,color:P.tp,fontWeight:700}}>Adding as <span style={{color:P.acc}}>{cu.name}</span></span>
@@ -143,20 +153,7 @@ function RemarkBox({onAdd,cu}){
         <Sel value={ch} onChange={e=>setCh(e.target.value)} style={{flex:1,minWidth:140,background:"#fff"}}><option value="">Channel (optional)</option>{CHANNELS.map(c=><option key={c}>{c}</option>)}</Sel>
         <div style={{display:"flex",alignItems:"center",gap:5,flex:1,minWidth:160}}><Ic n="cal" s={12} c={P.tm}/><Inp type="date" value={rem} onChange={e=>setRem(e.target.value)} style={{flex:1,background:"#fff"}}/></div>
         {rem&&<a href={gc("Follow-up",rem)} target="_blank" rel="noreferrer"><Btn v="gh" sm icon="cal">GCal</Btn></a>}
-        <Btn sm icon="msg" onClick={()=>{
-          if(!txt.trim())return;
-          onAdd({
-            id:uid(),
-            author:cu.name,
-            authorId:cu.id,
-            role:cu.role,
-            text:txt,
-            channel:ch,
-            reminder:rem,
-            date:new Date().toISOString()
-          });
-          setTxt("");setCh("");setRem("");
-        }}>Add</Btn>
+        <Btn sm icon="msg" onClick={()=>{if(!txt.trim())return;onAdd({id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:txt,channel:ch,reminder:rem,date:new Date().toISOString()});setTxt("");setCh("");setRem("");}}>Add</Btn>
       </div>
     </div>
   );
@@ -188,7 +185,7 @@ function LeadDetail({lead,onClose,onUpdate,cu,users}){
   const [tab,setTab]=useState("info");const [editing,setEditing]=useState(false);
   const ce=cu.role==="admin"||cu.id===lead.assignedTo;
   const au=users.find(u=>u.id===lead.assignedTo);
-  const chStage=s=>{const r={id:uid(),author:cu.name,authorId:cu.id,text:`Stage → "${s}"`,channel:"",date:new Date().toISOString(),sys:true};onUpdate({...lead,stage:s,remarks:[...(lead.remarks||[]),r],updatedAt:new Date().toISOString()});};
+  const chStage=s=>{const r={id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:`Stage → "${s}"`,channel:"",date:new Date().toISOString(),sys:true};onUpdate({...lead,stage:s,remarks:[...(lead.remarks||[]),r],updatedAt:new Date().toISOString()});};
   const addR=useCallback(r=>onUpdate({...lead,remarks:[...(lead.remarks||[]),r],updatedAt:new Date().toISOString()}),[lead,onUpdate]);
   if(editing)return <Mdl title={lead.company} onClose={onClose} wide><LeadForm lead={lead} users={users} onClose={()=>setEditing(false)} onSave={d=>{onUpdate({...lead,...d,updatedAt:new Date().toISOString()});setEditing(false);}}/></Mdl>;
   return(
@@ -345,13 +342,6 @@ function KCard({lead,onClick,users}){
 }
 
 function App(){
-  const DEFUSERS=[
-    {id:"admin",name:"Admin User",role:"admin",username:"admin",password:"admin123",email:"admin@company.com"},
-    {id:"u1",name:"Sarah Al-Rashid",role:"sales",username:"sarah",password:"pass123",email:"sarah@company.com"},
-    {id:"u2",name:"James Okafor",role:"sales",username:"james",password:"pass123",email:"james@company.com"},
-    {id:"u3",name:"Priya Menon",role:"sales",username:"priya",password:"pass123",email:"priya@company.com"},
-    {id:"u4",name:"Zainah Haji",role:"sales",username:"Zainabh",password:"clt123",email:"zainabh@company.com"},
-  ];
   const [users,setUsers]=useState(DEFUSERS);
   const [leads,setLeads]=useState([]);
   const [emails,setEmails]=useState([]);
@@ -370,11 +360,10 @@ function App(){
   const [saving,setSaving]=useState(false);
   const [lastSync,setLastSync]=useState(null);
   const [connErr,setConnErr]=useState(false);
-  const pollRef=useRef(null);
   const saveTimer=useRef(null);
+  const pollRef=useRef(null);
 
   const loadData=useCallback(async(quiet=false)=>{
-    if(saving) return; // Never reload while saving
     try{
       const d=await gasGet();
       if(d.users?.length)setUsers(d.users);
@@ -384,16 +373,14 @@ function App(){
       setConnErr(false);
     }catch(e){setConnErr(true);}
     if(!quiet)setLoading(false);
-  },[saving]);
+  },[]);
 
   useEffect(()=>{loadData();},[]);
-
   // No auto polling — data loads on login and manual Refresh only
 
   const persist=useCallback((nl,ne,nu)=>{
     clearTimeout(saveTimer.current);
     setSaving(true);
-    // Update local state immediately
     setLeads(nl);
     setEmails(ne);
     setUsers(nu);
@@ -407,14 +394,29 @@ function App(){
     },500);
   },[]);
 
-  const saveUsers=nu=>{setUsers(nu);persist(leads,emails,nu);};
-  const addLead=d=>{const l={...d,id:uid(),stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:d.notes?.trim()?[{id:uid(),author:cu.name,authorId:cu.id,text:d.notes,date:new Date().toISOString(),channel:""}]:[]};const nl=[l,...leads];setLeads(nl);persist(nl,emails,users);setShowLF(false);};
-  const updLead=l=>{const nl=leads.map(x=>x.id===l.id?l:x);setLeads(nl);setSelLead(l);persist(nl,emails,users);};
-  const addEmail=d=>{const ne=[{...d,id:uid(),createdBy:cu.id,createdByName:cu.name,createdByRole:cu.role,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false},...emails];setEmails(ne);persist(leads,ne,users);setShowEF(false);};
-  const updEmail=e=>{const ne=emails.map(x=>x.id===e.id?e:x);setEmails(ne);setSelEmail(e);persist(leads,ne,users);};
-  const convert=log=>{const l={id:uid(),company:log.toCompany,contact:log.toContact||"",email:log.toEmail,mobile:"",businessType:"",leadSource:"Outbound Email",clientSector:log.clientSector,assignedTo:cu.id,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),fromEmailLog:true,remarks:[{id:uid(),author:cu.name,authorId:cu.id,text:`Converted from email: "${log.subject}"`,date:new Date().toISOString(),channel:"Email",sys:true}]};const nl=[l,...leads];const ne=emails.map(e=>e.id===log.id?{...log,converted:true,updatedAt:new Date().toISOString()}:e);setLeads(nl);setEmails(ne);persist(nl,ne,users);setSelEmail(null);setView("leads");};
+  const saveUsers=nu=>{persist(leads,emails,nu);};
+  const addLead=d=>{const l={...d,id:uid(),stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:d.notes?.trim()?[{id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:d.notes,date:new Date().toISOString(),channel:""}]:[]};const nl=[l,...leads];persist(nl,emails,users);setShowLF(false);};
+  const updLead=l=>{const nl=leads.map(x=>x.id===l.id?l:x);setSelLead(l);persist(nl,emails,users);};
+  const addEmail=d=>{const ne=[{...d,id:uid(),createdBy:cu.id,createdByName:cu.name,createdByRole:cu.role,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false},...emails];persist(leads,ne,users);setShowEF(false);};
+  const updEmail=e=>{const ne=emails.map(x=>x.id===e.id?e:x);setSelEmail(e);persist(leads,ne,users);};
+  const convert=log=>{
+    const l={id:uid(),company:log.toCompany,contact:log.toContact||"",email:log.toEmail,mobile:"",businessType:"",leadSource:"Outbound Email",clientSector:log.clientSector,assignedTo:cu.id,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),fromEmailLog:true,remarks:[{id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:`Converted from email: "${log.subject}"`,date:new Date().toISOString(),channel:"Email",sys:true}]};
+    const updatedLog={...log,converted:true,updatedAt:new Date().toISOString()};
+    const nl=[l,...leads];
+    const ne=emails.map(e=>e.id===log.id?updatedLog:e);
+    // Update state first
+    setLeads(nl);
+    setEmails(ne);
+    setSelEmail(null);
+    setView("leads");
+    // Then save — with slight delay to ensure state is set
+    setTimeout(()=>persist(nl,ne,users),100);
+  };
 
-  useEffect(()=>{if(cu){const f=users.find(u=>u.id===cu.id);if(f&&f.name!==cu.name)setCu(f);}},[users]);
+  const importLeadsCSV=nl=>{const existing=new Set(leads.map(l=>l.email.toLowerCase()));const fresh=nl.filter(l=>!existing.has(l.email.toLowerCase()));if(!fresh.length){alert("No new leads — all emails already exist.");return;}const merged=[...fresh,...leads];persist(merged,emails,users);alert(`✓ Imported ${fresh.length} new lead(s). ${nl.length-fresh.length} duplicate(s) skipped.`);};
+  const importEmailsCSV=ne=>{const existing=new Set(emails.map(e=>(e.toEmail+e.subject).toLowerCase()));const fresh=ne.filter(e=>!existing.has((e.toEmail+e.subject).toLowerCase()));if(!fresh.length){alert("No new emails — all already exist.");return;}const merged=[...fresh,...emails];persist(leads,merged,users);alert(`✓ Imported ${fresh.length} new email(s). ${ne.length-fresh.length} duplicate(s) skipped.`);};
+  const parseCSV=txt=>{const lines=txt.split(/\r?\n/).filter(l=>l.trim());return lines.slice(1).map(line=>{const cols=[];let cur="",inQ=false;for(const ch of line){if(ch==='"'){inQ=!inQ;}else if(ch===","&&!inQ){cols.push(cur.trim());cur="";}else{cur+=ch;}}cols.push(cur.trim());return cols.map(c=>c.replace(/^"|"$/g,"").trim());}).filter(r=>r.some(c=>c));};
+  const dlCSV=(s,name)=>{const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(s);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);};
 
   const fl=leads.filter(l=>{
     if(fsStage!=="All"&&l.stage!==fsStage)return false;
@@ -432,51 +434,16 @@ function App(){
   );
 
   if(!li)return <Login users={users} onLogin={u=>{
-    setCu(u);
-    setLi(true);
-    // Log user login to Google Sheet
-    gasPost({
-      leads,emails,users,
-      loginLog:{
-        userId:u.id,
-        userName:u.name,
-        userRole:u.role,
-        loginTime:new Date().toISOString()
-      }
-    });
+    setCu(u);setLi(true);
+    gasPost({leads,emails,users,loginLog:{userId:u.id,userName:u.name,userRole:u.role,username:u.username,loginTime:new Date().toISOString()}});
   }}/>;
 
-  const importLeadsCSV=nl=>{
-    const existing=new Set(leads.map(l=>l.email.toLowerCase()));
-    const fresh=nl.filter(l=>!existing.has(l.email.toLowerCase()));
-    if(!fresh.length){alert("No new leads to import — all emails already exist.");return;}
-    const merged=[...fresh,...leads];
-    setLeads(merged);persist(merged,emails,users);
-    alert(`✓ Imported ${fresh.length} new lead(s). ${nl.length-fresh.length} duplicate(s) skipped.`);
-  };
-  const importEmailsCSV=ne=>{
-    const existing=new Set(emails.map(e=>(e.toEmail+e.subject).toLowerCase()));
-    const fresh=ne.filter(e=>!existing.has((e.toEmail+e.subject).toLowerCase()));
-    if(!fresh.length){alert("No new emails to import — all already exist.");return;}
-    const merged=[...fresh,...emails];
-    setEmails(merged);persist(leads,merged,users);
-    alert(`✓ Imported ${fresh.length} new email(s). ${ne.length-fresh.length} duplicate(s) skipped.`);
-  };
-  const parseCSV=txt=>{
-    const lines=txt.split(/\r?\n/).filter(l=>l.trim());
-    return lines.slice(1).map(line=>{
-      const cols=[];let cur="",inQ=false;
-      for(const ch of line){if(ch==='"'){inQ=!inQ;}else if(ch===","&&!inQ){cols.push(cur.trim());cur="";}else{cur+=ch;}}
-      cols.push(cur.trim());
-      return cols.map(c=>c.replace(/^"|"$/g,"").trim());
-    }).filter(r=>r.some(c=>c));
-  };
-  const dlCSV=(s,name)=>{const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(s);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);};
   const NAV=[{id:"dash",label:"Dashboard",icon:"bk"},{id:"leads",label:"Leads Pipeline",icon:"usr"},{id:"emails",label:"Email Log",icon:"em"},{id:"import",label:"Import Data",icon:"dl"},{id:"track",label:"Conversion Tracker",icon:"ch"},...(cu.role==="admin"?[{id:"users",label:"User Management",icon:"shd"}]:[])];
   const ss=STAGES.map(s=>({stage:s,count:leads.filter(l=>l.stage===s).length}));
 
   return(
     <div style={{display:"flex",minHeight:"100vh",background:P.bg,fontFamily:"'Segoe UI',system-ui,sans-serif",color:P.tp}}>
+      <style>{`*{box-sizing:border-box;}select option{background:#fff;color:#1A2744;}`}</style>
       <div style={{width:210,background:P.sb,display:"flex",flexDirection:"column",flexShrink:0,position:"sticky",top:0,height:"100vh"}}>
         <div style={{padding:"20px 18px 14px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
           <div style={{fontSize:8,letterSpacing:"3px",color:P.acc,fontWeight:800,marginBottom:4,textTransform:"uppercase"}}>Sales Ops</div>
@@ -497,7 +464,7 @@ function App(){
             <Av name={cu.name} sz={30}/>
             <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:800,color:"rgba(255,255,255,0.9)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cu.name}</div><div style={{fontSize:9,color:P.acc,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px"}}>{cu.role}</div></div>
           </div>
-          <button onClick={()=>{setCu(null);setLi(false);setView("dash");clearInterval(pollRef.current);}} style={{display:"flex",alignItems:"center",gap:7,width:"100%",padding:"7px 10px",background:"rgba(220,38,38,0.12)",border:"1px solid rgba(220,38,38,0.25)",borderRadius:7,color:"#FCA5A5",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit"}}>
+          <button onClick={()=>{setCu(null);setLi(false);setView("dash");}} style={{display:"flex",alignItems:"center",gap:7,width:"100%",padding:"7px 10px",background:"rgba(220,38,38,0.12)",border:"1px solid rgba(220,38,38,0.25)",borderRadius:7,color:"#FCA5A5",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit"}}>
             <Ic n="out" s={12} c="#FCA5A5"/>Sign Out
           </button>
         </div>
@@ -616,16 +583,20 @@ function App(){
               <Btn icon="plus" onClick={()=>setShowEF(true)} style={{marginLeft:"auto"}}>Log Email</Btn>
             </div>
             <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:12,overflow:"hidden",boxShadow:P.sh}}>
-              <div style={{display:"grid",gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr auto",padding:"10px 16px",borderBottom:`1.5px solid ${P.bdr}`,fontSize:9,color:P.tm,fontWeight:800,letterSpacing:"1px",textTransform:"uppercase",background:P.bg}}>
-                <span>Subject/Company</span><span>Contact</span><span>Sector</span><span>Date</span><span>Status</span><span>Action</span>
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1.2fr 1fr 1fr 1fr 1fr auto",padding:"10px 16px",borderBottom:`1.5px solid ${P.bdr}`,fontSize:9,color:P.tm,fontWeight:800,letterSpacing:"1px",textTransform:"uppercase",background:P.bg}}>
+                <span>Subject/Company</span><span>Logged By</span><span>Sector</span><span>Date</span><span>Status</span><span>Contact</span><span>Action</span>
               </div>
               {emails.map(log=>{const sc={"Sent":P.inf,"Replied":P.suc,"No Response":P.acc,"Bounced":P.dan,"Converted":"#7C3AED"};return(
-                <div key={log.id} style={{display:"grid",gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr auto",padding:"11px 16px",borderBottom:`1px solid ${P.bdr}`,cursor:"pointer",alignItems:"center"}} onClick={()=>setSelEmail(log)} onMouseEnter={e=>e.currentTarget.style.background=P.acl} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <div key={log.id} style={{display:"grid",gridTemplateColumns:"2fr 1.2fr 1fr 1fr 1fr 1fr auto",padding:"11px 16px",borderBottom:`1px solid ${P.bdr}`,cursor:"pointer",alignItems:"center"}} onClick={()=>setSelEmail(log)} onMouseEnter={e=>e.currentTarget.style.background=P.acl} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                   <div><div style={{fontWeight:800,fontSize:13,color:P.tp}}>{log.subject}</div><div style={{fontSize:11,color:P.ts}}>{log.toCompany}</div></div>
-                  <div><div style={{fontSize:11,color:P.ts,fontWeight:600}}>{log.toContact||"—"}</div><div style={{fontSize:10,color:P.tm}}>{log.toEmail}</div></div>
+                  <div style={{display:"flex",alignItems:"center",gap:5}}>
+                    <Av name={log.createdByName||"?"} sz={20}/>
+                    <div><div style={{fontSize:11,fontWeight:700,color:P.tp}}>{log.createdByName||"Unknown"}</div><Bdg label={log.createdByRole==="admin"?"ADMIN":"SALES"} color={log.createdByRole==="admin"?P.acc:P.inf} sm/></div>
+                  </div>
                   <Bdg label={log.clientSector} color={P.inf} sm/>
                   <div style={{fontSize:11,color:P.ts}}>{fd(log.sentDate)}</div>
                   <Bdg label={log.status} color={sc[log.status]||"#6B7280"} sm/>
+                  <div><div style={{fontSize:11,color:P.ts,fontWeight:600}}>{log.toContact||"—"}</div><div style={{fontSize:10,color:P.tm}}>{log.toEmail}</div></div>
                   <div onClick={e=>e.stopPropagation()}>{!log.converted?<Btn v="suc" sm icon="cvt" onClick={()=>convert(log)}>Convert</Btn>:<Bdg label="✓ Lead" color={P.suc} sm/>}</div>
                 </div>
               );})}
@@ -637,88 +608,43 @@ function App(){
         {view==="import"&&(
           <div style={{padding:"24px 28px"}}>
             <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Import Data</h1>
-            <p style={{margin:"0 0 22px",color:P.ts,fontSize:12}}>Upload CSV files to add new leads or emails. Existing records are never overwritten or deleted.</p>
+            <p style={{margin:"0 0 22px",color:P.ts,fontSize:12}}>Upload CSV files to add new leads or emails. Existing records are never overwritten.</p>
             <div style={{padding:"10px 14px",background:"#F0FDF4",border:"1.5px solid #86EFAC",borderRadius:10,marginBottom:24,fontSize:12,color:P.suc,fontWeight:600,display:"flex",gap:8,alignItems:"center"}}>
               <Ic n="ok" s={14} c={P.suc}/>Safe import — duplicates are automatically skipped. Your existing data stays intact.
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
-              {/* Leads Import */}
               <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:14,padding:22,boxShadow:P.sh}}>
                 <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14}}>
                   <div style={{width:36,height:36,borderRadius:9,background:P.inf+"15",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n="usr" s={18} c={P.inf}/></div>
                   <div><div style={{fontWeight:800,fontSize:14,color:P.tp}}>Import Leads</div><div style={{fontSize:11,color:P.tm}}>CSV with lead details</div></div>
                 </div>
-                <div style={{fontSize:11,color:P.ts,marginBottom:14,lineHeight:1.6,background:P.bg,padding:"10px 12px",borderRadius:8,border:`1px solid ${P.bdr}`}}>
-                  <strong>Required columns:</strong> Company, Contact, Email<br/>
-                  <strong>Optional:</strong> Mobile, Business Type, Lead Source, Sector, Assigned To
-                </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  <button onClick={()=>dlCSV("Company,Contact Person,Email,Mobile,Business Type,Lead Source,Client Sector,Assigned To\nAcme Corp,John Smith,john@acme.com,+971501234567,B2B,LinkedIn,Hotels,\n","leads_template.csv")}
-                    style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:P.ts,fontFamily:"inherit"}}>
-                    <Ic n="dl" s={13} c={P.ts}/>Download Template
-                  </button>
+                  <button onClick={()=>dlCSV("Company,Contact Person,Email,Mobile,Business Type,Lead Source,Client Sector,Assigned To\nAcme Corp,John Smith,john@acme.com,+971501234567,B2B,LinkedIn,Hotels,\n","leads_template.csv")} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:P.ts,fontFamily:"inherit"}}><Ic n="dl" s={13} c={P.ts}/>Download Template</button>
                   <label style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:`linear-gradient(135deg,${P.inf},#3B82F6)`,border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:"#fff",fontFamily:"inherit"}}>
                     <Ic n="dl" s={13} c="#fff"/>Upload Leads CSV
-                    <input type="file" accept=".csv" style={{display:"none"}} onChange={e=>{
-                      const f=e.target.files[0];if(!f)return;
-                      const r=new FileReader();r.onload=ev=>{
-                        try{
-                          const rows=parseCSV(ev.target.result);
-                          const nl=rows.map(cols=>{
-                            const [company="",contact="",email="",mobile="",businessType="",leadSource="",clientSector="",assignedTo=""]=cols;
-                            if(!company||!email||!email.includes("@"))return null;
-                            return{id:uid(),company,contact,email,mobile,businessType,leadSource,clientSector,assignedTo,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[]};
-                          }).filter(Boolean);
-                          importLeadsCSV(nl);
-                        }catch{alert("Error reading CSV. Please check the format.");}
-                      };r.readAsText(f);e.target.value="";
-                    }}/>
+                    <input type="file" accept=".csv" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const rows=parseCSV(ev.target.result);const nl=rows.map(cols=>{const[company="",contact="",email="",mobile="",businessType="",leadSource="",clientSector="",assignedTo=""]=cols;if(!company||!email||!email.includes("@"))return null;return{id:uid(),company,contact,email,mobile,businessType,leadSource,clientSector,assignedTo,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[]};}).filter(Boolean);importLeadsCSV(nl);}catch{alert("Error reading CSV.");}};r.readAsText(f);e.target.value="";}}/>
                   </label>
                 </div>
-                <div style={{marginTop:14,padding:"8px 12px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`,fontSize:11,color:P.tm}}>
-                  Currently <strong style={{color:P.tp}}>{leads.length}</strong> leads in system
-                </div>
+                <div style={{marginTop:14,padding:"8px 12px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`,fontSize:11,color:P.tm}}>Currently <strong style={{color:P.tp}}>{leads.length}</strong> leads in system</div>
               </div>
-              {/* Emails Import */}
               <div style={{background:P.card,border:`1.5px solid ${P.bdr}`,borderRadius:14,padding:22,boxShadow:P.sh}}>
                 <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14}}>
                   <div style={{width:36,height:36,borderRadius:9,background:"#7C3AED15",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n="em" s={18} c="#7C3AED"/></div>
                   <div><div style={{fontWeight:800,fontSize:14,color:P.tp}}>Import Email Log</div><div style={{fontSize:11,color:P.tm}}>CSV with outbound emails</div></div>
                 </div>
-                <div style={{fontSize:11,color:P.ts,marginBottom:14,lineHeight:1.6,background:P.bg,padding:"10px 12px",borderRadius:8,border:`1px solid ${P.bdr}`}}>
-                  <strong>Required columns:</strong> Subject, Company, Email, Sector<br/>
-                  <strong>Optional:</strong> Contact, Date Sent, Status, Body
-                </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  <button onClick={()=>dlCSV("Subject,Company,Contact Person,Email,Client Sector,Date Sent,Status,Body\nIntro Email,Acme Corp,John Smith,john@acme.com,Hotels,2026-04-07,Sent,\n","emails_template.csv")}
-                    style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:P.ts,fontFamily:"inherit"}}>
-                    <Ic n="dl" s={13} c={P.ts}/>Download Template
-                  </button>
+                  <button onClick={()=>dlCSV("Subject,Company,Contact Person,Email,Client Sector,Date Sent,Status,Body\nIntro Email,Acme Corp,John Smith,john@acme.com,Hotels,2026-04-07,Sent,\n","emails_template.csv")} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:P.bg,border:`1.5px solid ${P.bdr}`,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:P.ts,fontFamily:"inherit"}}><Ic n="dl" s={13} c={P.ts}/>Download Template</button>
                   <label style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:"linear-gradient(135deg,#7C3AED,#9333EA)",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700,color:"#fff",fontFamily:"inherit"}}>
                     <Ic n="dl" s={13} c="#fff"/>Upload Emails CSV
-                    <input type="file" accept=".csv" style={{display:"none"}} onChange={e=>{
-                      const f=e.target.files[0];if(!f)return;
-                      const r=new FileReader();r.onload=ev=>{
-                        try{
-                          const rows=parseCSV(ev.target.result);
-                          const ne=rows.map(cols=>{
-                            const [subject="",toCompany="",toContact="",toEmail="",clientSector="",sentDate="",status="Sent",body=""]=cols;
-                            if(!subject||!toEmail||!toEmail.includes("@"))return null;
-                            return{id:uid(),subject,toCompany,toContact,toEmail,clientSector,sentDate:sentDate||new Date().toISOString().slice(0,10),status:status||"Sent",body,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false};
-                          }).filter(Boolean);
-                          importEmailsCSV(ne);
-                        }catch{alert("Error reading CSV. Please check the format.");}
-                      };r.readAsText(f);e.target.value="";
-                    }}/>
+                    <input type="file" accept=".csv" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const rows=parseCSV(ev.target.result);const ne=rows.map(cols=>{const[subject="",toCompany="",toContact="",toEmail="",clientSector="",sentDate="",status="Sent",body=""]=cols;if(!subject||!toEmail||!toEmail.includes("@"))return null;return{id:uid(),subject,toCompany,toContact,toEmail,clientSector,sentDate:sentDate||new Date().toISOString().slice(0,10),status:status||"Sent",body,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false};}).filter(Boolean);importEmailsCSV(ne);}catch{alert("Error reading CSV.");}};r.readAsText(f);e.target.value="";}}/>
                   </label>
                 </div>
-                <div style={{marginTop:14,padding:"8px 12px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`,fontSize:11,color:P.tm}}>
-                  Currently <strong style={{color:P.tp}}>{emails.length}</strong> emails in system
-                </div>
+                <div style={{marginTop:14,padding:"8px 12px",background:P.bg,borderRadius:7,border:`1px solid ${P.bdr}`,fontSize:11,color:P.tm}}>Currently <strong style={{color:P.tp}}>{emails.length}</strong> emails in system</div>
               </div>
             </div>
           </div>
         )}
+
         {view==="track"&&(
           <div style={{padding:"24px 28px"}}>
             <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Conversion Tracker</h1>
@@ -765,7 +691,7 @@ function App(){
             <span style={{marginLeft:"auto"}}>{!selEmail.converted?<Btn v="suc" sm icon="cvt" onClick={()=>convert(selEmail)}>Convert to Lead</Btn>:<Bdg label="✓ Converted" color={P.suc}/>}</span>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 24px"}}>
-            {[["Company",selEmail.toCompany],["Contact",selEmail.toContact||"—"],["Email",selEmail.toEmail],["Sector",selEmail.clientSector],["Date Sent",fd(selEmail.sentDate)],["Status",selEmail.status]].map(([k,v])=>(
+            {[["Company",selEmail.toCompany],["Contact",selEmail.toContact||"—"],["Email",selEmail.toEmail],["Sector",selEmail.clientSector],["Date Sent",fd(selEmail.sentDate)],["Status",selEmail.status],["Logged By",selEmail.createdByName||"Unknown"],["Role",(selEmail.createdByRole||"sales").toUpperCase()]].map(([k,v])=>(
               <div key={k} style={{marginBottom:13}}><div style={{fontSize:10,color:P.tm,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:2}}>{k}</div><div style={{fontSize:13,color:P.tp,fontWeight:500}}>{v}</div></div>
             ))}
             {selEmail.body&&<div style={{gridColumn:"1/-1"}}><div style={{fontSize:10,color:P.tm,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:5}}>Body</div><div style={{background:P.bg,border:`1px solid ${P.bdr}`,borderRadius:8,padding:12,fontSize:12,color:P.ts,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{selEmail.body}</div></div>}
