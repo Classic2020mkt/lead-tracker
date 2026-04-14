@@ -399,7 +399,19 @@ function App(){
   const updLead=l=>{const nl=leads.map(x=>x.id===l.id?l:x);setSelLead(l);persist(nl,emails,users);};
   const addEmail=d=>{const ne=[{...d,id:uid(),createdBy:cu.id,createdByName:cu.name,createdByRole:cu.role,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:[],converted:false},...emails];persist(leads,ne,users);setShowEF(false);};
   const updEmail=e=>{const ne=emails.map(x=>x.id===e.id?e:x);setSelEmail(e);persist(leads,ne,users);};
-  const convert=log=>{const l={id:uid(),company:log.toCompany,contact:log.toContact||"",email:log.toEmail,mobile:"",businessType:"",leadSource:"Outbound Email",clientSector:log.clientSector,assignedTo:cu.id,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),fromEmailLog:true,remarks:[{id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:`Converted from email: "${log.subject}"`,date:new Date().toISOString(),channel:"Email",sys:true}]};const nl=[l,...leads];const ne=emails.map(e=>e.id===log.id?{...log,converted:true,updatedAt:new Date().toISOString()}:e);setSelEmail(null);setView("leads");persist(nl,ne,users);};
+  const convert=log=>{
+    const l={id:uid(),company:log.toCompany,contact:log.toContact||"",email:log.toEmail,mobile:"",businessType:"",leadSource:"Outbound Email",clientSector:log.clientSector,assignedTo:cu.id,stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),fromEmailLog:true,remarks:[{id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:`Converted from email: "${log.subject}"`,date:new Date().toISOString(),channel:"Email",sys:true}]};
+    const updatedLog={...log,converted:true,updatedAt:new Date().toISOString()};
+    const nl=[l,...leads];
+    const ne=emails.map(e=>e.id===log.id?updatedLog:e);
+    // Update state first
+    setLeads(nl);
+    setEmails(ne);
+    setSelEmail(null);
+    setView("leads");
+    // Then save — with slight delay to ensure state is set
+    setTimeout(()=>persist(nl,ne,users),100);
+  };
 
   const importLeadsCSV=nl=>{const existing=new Set(leads.map(l=>l.email.toLowerCase()));const fresh=nl.filter(l=>!existing.has(l.email.toLowerCase()));if(!fresh.length){alert("No new leads — all emails already exist.");return;}const merged=[...fresh,...leads];persist(merged,emails,users);alert(`✓ Imported ${fresh.length} new lead(s). ${nl.length-fresh.length} duplicate(s) skipped.`);};
   const importEmailsCSV=ne=>{const existing=new Set(emails.map(e=>(e.toEmail+e.subject).toLowerCase()));const fresh=ne.filter(e=>!existing.has((e.toEmail+e.subject).toLowerCase()));if(!fresh.length){alert("No new emails — all already exist.");return;}const merged=[...fresh,...emails];persist(leads,merged,users);alert(`✓ Imported ${fresh.length} new email(s). ${ne.length-fresh.length} duplicate(s) skipped.`);};
