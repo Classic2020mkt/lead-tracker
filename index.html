@@ -23,7 +23,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbwCJQnPRQnozOb05RyEM0_x00jaJtPsx1BxYG4FgdvmRqOcErV2bu2RuShCucCFiMwu/exec";
+const GAS="https://script.google.com/macros/s/AKfycbxx5oxITx_iA87OOHiL68WCgC4DRWutxJ-Ak60vC67pO3rCxigRRZoVGvyd4l2_tcTn/exec";
 
 const gasGet=()=>new Promise((res,rej)=>{
   const cb="cb_"+Date.now();
@@ -34,13 +34,23 @@ const gasGet=()=>new Promise((res,rej)=>{
   document.body.appendChild(s);
 });
 
-const gasPost=d=>new Promise((res,rej)=>{
-  const xhr=new XMLHttpRequest();
-  xhr.open("POST",GAS,true);
-  xhr.setRequestHeader("Content-Type","text/plain");
-  xhr.onload=()=>res({ok:true});
-  xhr.onerror=()=>res({ok:true}); // resolve anyway — GAS always saves even on CORS error
-  xhr.send(JSON.stringify(d));
+const gasPost=d=>new Promise((res)=>{
+  const json=JSON.stringify(d);
+  const chunks=[];
+  const size=1500;
+  for(let i=0;i<json.length;i+=size) chunks.push(json.slice(i,i+size));
+  const total=chunks.length;
+  const id="save_"+Date.now();
+  let done=0;
+  chunks.forEach((chunk,idx)=>{
+    const cb="cb_"+Date.now()+"_"+idx;
+    const s=document.createElement("script");
+    s.src=GAS+"?callback="+cb+"&saveId="+id+"&chunk="+idx+"&total="+total+"&data="+encodeURIComponent(chunk);
+    window[cb]=()=>{done++;delete window[cb];document.body.removeChild(s);if(done===total)res({ok:true});};
+    s.onerror=()=>{done++;delete window[cb];document.body.removeChild(s);if(done===total)res({ok:true});};
+    document.body.appendChild(s);
+  });
+  if(total===0)res({ok:true});
 });
 
 const DEFUSERS=[
