@@ -23,7 +23,7 @@ select option{background:#fff;color:#1A2744;}
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-const GAS="https://script.google.com/macros/s/AKfycbwfA-vnD1cNr56vamnTev4ESg7oEbQcuX-JW1zEa_ujU0FW_CKZe_2H3sB3tYj-KWau/exec";
+const GAS="https://script.google.com/macros/s/AKfycbycqY9EZUT8Z6qQpKmUG5yQ1h-SFKFQf5l4GZnfEJ1RY5IJrbx4Bbotp1oZvkpYJkfw/exec";
 
 const gasGet=()=>new Promise((res,rej)=>{
   const cb="cb_"+Date.now();
@@ -34,15 +34,31 @@ const gasGet=()=>new Promise((res,rej)=>{
   document.body.appendChild(s);
 });
 
-const gasPost=d=>new Promise((res,rej)=>{
-  const cb="cb_"+Date.now();
-  const s=document.createElement("script");
-  // Encode data as URL parameter for JSONP POST workaround
-  const encoded=encodeURIComponent(JSON.stringify(d));
-  s.src=GAS+"?callback="+cb+"&method=post&data="+encoded;
-  window[cb]=r=>{res(r);delete window[cb];document.body.removeChild(s);};
-  s.onerror=rej;
-  document.body.appendChild(s);
+const gasPost=d=>new Promise((res)=>{
+  // Use a hidden form POST — bypasses CORS completely
+  const form=document.createElement("form");
+  form.method="POST";
+  form.action=GAS;
+  form.target="_blank_post_"+Date.now();
+  form.style.display="none";
+  const input=document.createElement("input");
+  input.type="hidden";
+  input.name="data";
+  input.value=JSON.stringify(d);
+  form.appendChild(input);
+  // Create hidden iframe as target
+  const iframe=document.createElement("iframe");
+  iframe.name=form.target;
+  iframe.style.display="none";
+  document.body.appendChild(iframe);
+  document.body.appendChild(form);
+  form.submit();
+  // Cleanup after 3 seconds
+  setTimeout(()=>{
+    document.body.removeChild(form);
+    document.body.removeChild(iframe);
+    res({ok:true});
+  },3000);
 });
 
 const DEFUSERS=[
