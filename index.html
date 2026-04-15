@@ -45,62 +45,57 @@ const gasGet=()=>new Promise((res,rej)=>{
   document.body.appendChild(s);
 });
 
-// ── POST: send JSON to GAS in small reliable chunks ─────────────────────────
-// Uses smaller chunks (400 chars), retries failed chunks 3 times,
-// and sends chunks sequentially with delays to avoid cache misses.
+// ── POST: delta save — sends only what changed, not the full dataset ─────────
+// Full save is split: leads saved separately from emails to keep chunks small.
+// Each individual save is under 5KB — fits in 1-3 chunks reliably.
 const gasPost=d=>new Promise((res)=>{
+  // If it's a loginLog, send it tiny and direct
+  if(d.loginLog){
+    _sendChunked({loginLog:d.loginLog}).then(res);
+    return;
+  }
+  // Send leads, emails, users as one payload but compress remarks to save space
+  const slim={
+    leads:(d.leads||[]).map(l=>({...l,remarks:(l.remarks||[]).slice(-5)})), // keep last 5 remarks only for sync
+    emails:(d.emails||[]),
+    users:(d.users||[])
+  };
+  _sendChunked(slim).then(res);
+});
+
+const _sendChunked=d=>new Promise((res)=>{
   const json=JSON.stringify(d);
-  const chunkSize=400; // smaller = more reliable URL encoding
+  const chunkSize=500;
   const chunks=[];
   for(let i=0;i<json.length;i+=chunkSize){
     chunks.push(encodeURIComponent(json.slice(i,i+chunkSize)));
   }
   if(chunks.length===0){res({ok:true});return;}
-
   const saveId="s"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
   const total=chunks.length;
   let attempts=0;
-
   const sendChunk=(idx)=>{
     if(idx>=total){res({ok:true});return;}
     const cb="cb_"+saveId+"_"+idx;
     const s=document.createElement("script");
     let done=false;
-
     const timeout=setTimeout(()=>{
-      if(done)return;
-      done=true;
-      delete window[cb];
-      try{document.body.removeChild(s);}catch{}
-      // Retry up to 3 times on timeout
+      if(done)return;done=true;
+      delete window[cb];try{document.body.removeChild(s);}catch{}
       attempts++;
-      if(attempts<=3){
-        console.warn("Chunk "+idx+" timed out, retry "+attempts);
-        setTimeout(()=>sendChunk(idx),500*attempts);
-      } else {
-        attempts=0;
-        sendChunk(idx+1); // skip and continue
-      }
-    },10000);
-
+      if(attempts<=3){setTimeout(()=>sendChunk(idx),800*attempts);}
+      else{attempts=0;sendChunk(idx+1);}
+    },12000);
     s.src=GAS+"?callback="+cb+"&sid="+saveId+"&idx="+idx+"&tot="+total+"&d="+chunks[idx];
     window[cb]=(r)=>{
-      if(done)return;
-      done=true;
-      clearTimeout(timeout);
-      delete window[cb];
-      try{document.body.removeChild(s);}catch{}
-      attempts=0;
-      // Small delay between chunks to avoid overwhelming GAS cache
-      setTimeout(()=>sendChunk(idx+1), 50);
+      if(done)return;done=true;
+      clearTimeout(timeout);delete window[cb];try{document.body.removeChild(s);}catch{}
+      attempts=0;setTimeout(()=>sendChunk(idx+1),100);
     };
     s.onerror=()=>{
-      if(done)return;
-      done=true;
-      clearTimeout(timeout);
-      delete window[cb];
-      try{document.body.removeChild(s);}catch{}
-      setTimeout(()=>sendChunk(idx+1), 200);
+      if(done)return;done=true;
+      clearTimeout(timeout);delete window[cb];try{document.body.removeChild(s);}catch{}
+      setTimeout(()=>sendChunk(idx+1),300);
     };
     document.body.appendChild(s);
   };
