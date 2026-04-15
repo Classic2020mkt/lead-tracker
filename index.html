@@ -45,23 +45,25 @@ const gasGet=()=>new Promise((res,rej)=>{
   document.body.appendChild(s);
 });
 
-// ── POST: delta save — sends only what changed, not the full dataset ─────────
-// Full save is split: leads saved separately from emails to keep chunks small.
-// Each individual save is under 5KB — fits in 1-3 chunks reliably.
-const gasPost=d=>new Promise((res)=>{
-  // If it's a loginLog, send it tiny and direct
-  if(d.loginLog){
-    _sendChunked({loginLog:d.loginLog}).then(res);
-    return;
+// ── GET: fetch all data ──────────────────────────────────────────────────────
+// (gasGet already defined above)
+
+// ── POST: try fetch first, fall back to chunked JSONP ────────────────────────
+const gasPost=async(d)=>{
+  // Try fetch/POST first — clean single request
+  try {
+    const resp = await fetch(GAS, {
+      method:"POST",
+      body: JSON.stringify(d),
+      headers:{"Content-Type":"text/plain"} // text/plain avoids CORS preflight
+    });
+    if(resp.ok) return {ok:true};
+  } catch(err) {
+    console.log("fetch failed, trying JSONP chunks:", err.message);
   }
-  // Send leads, emails, users as one payload but compress remarks to save space
-  const slim={
-    leads:(d.leads||[]).map(l=>({...l,remarks:(l.remarks||[]).slice(-5)})), // keep last 5 remarks only for sync
-    emails:(d.emails||[]),
-    users:(d.users||[])
-  };
-  _sendChunked(slim).then(res);
-});
+  // Fallback: chunked JSONP
+  return _sendChunked(d);
+};
 
 const _sendChunked=d=>new Promise((res)=>{
   const json=JSON.stringify(d);
