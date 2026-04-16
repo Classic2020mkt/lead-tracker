@@ -22,11 +22,9 @@ select option{background:#fff;color:#1A2744;}
 <div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
-
 const GAS="https://script.google.com/macros/s/AKfycbwuUzbJl5mC7Ncnv0lxhGy0XKwFsXWVB0n3UbII70OuyAm8uRYJEPhpNzkL5Km-4fi2/exec";
 const SHEET_ID="19zAQ7LZZ8-DaluP6r1aoOfan5QyT-tB913-6GX-9K1k";
 const API_KEY="AIzaSyDMSRrll3xxyUA8pHj0RD-pL8O2LNDMEcA";
-
 // ── GET: fetch all data via Google Sheets API ────────────────────────────────
 // Direct API call — no chunking, no JSONP, instant and reliable
 const gasGet=async()=>{
@@ -59,7 +57,6 @@ const gasGet=async()=>{
     });
   }
 };
-
 // ── SAVE: URLSearchParams — body survives GAS redirect, action always set ────
 const gasPost=async(d)=>{
   const action=d.loginLog?'logLogin':'saveAndSync';
@@ -76,7 +73,6 @@ const gasPost=async(d)=>{
     return{ok:false};
   }
 };
-
 // Simple single JSONP GET request
 const _jsonpGet=url=>new Promise((res)=>{
   // If URL is too long (>7000 chars), fall back to chunked
@@ -108,7 +104,6 @@ const _jsonpGet=url=>new Promise((res)=>{
   };
   document.body.appendChild(s);
 });
-
 const _sendChunked=d=>new Promise((res)=>{
   const json=JSON.stringify(d);
   const chunkSize=500;
@@ -147,7 +142,6 @@ const _sendChunked=d=>new Promise((res)=>{
   };
   sendChunk(0);
 });
-
 const DEFUSERS=[
   {id:"admin",name:"Munawar Haris",role:"admin",username:"Munawar",password:"clt123",email:"marketing@cltdxb.com"},
   {id:"u1",name:"Masood Bawazeer",role:"sales",username:"Masood",password:"clt123",email:"Masood@cltdxb.com"},
@@ -156,7 +150,6 @@ const DEFUSERS=[
   {id:"u4",name:"Mahra Saeed",role:"sales",username:"Mahra",password:"clt123",email:"mahra.saeed@cltdxb.com"},
   {id:"u5",name:"Dana",role:"sales",username:"Dana",password:"clt123",email:"Sales@cltad.com"},
 ];
-
 const LS=["Inbound Email","Outbound Email","Word of Mouth","LinkedIn","Direct Marketing","Email Marketing","Former Clients","Driver Referrals"];
 const STAGES=["Opportunities","Proposal","Negotiation","Gone Silent","Lead Lost to Competitor","Lead Lost Out of Scope","Contract Sign Off"];
 const SECTORS=["Oil & Gas","Hotels","FMCG","Travel & Tours Co","Airline","Event Management Co","Semi-Govt Entity","Banks","Foreign Govt Office","Exhibitors"];
@@ -164,11 +157,9 @@ const CHANNELS=["Email","Call","WhatsApp","LinkedIn Messenger"];
 const BTYPES=["B2B","B2C","B2G","Non-Profit","SME","Enterprise"];
 const SC={"Opportunities":"#2563EB","Proposal":"#7C3AED","Negotiation":"#D97706","Gone Silent":"#6B7280","Lead Lost to Competitor":"#DC2626","Lead Lost Out of Scope":"#EA580C","Contract Sign Off":"#059669"};
 const P={bg:"#F2EFE9",card:"#fff",sb:"#1A2744",acc:"#C9962A",bdr:"#E2D9CC",bdrk:"#C8BEAF",ibg:"#FAF9F6",tp:"#1A2744",ts:"#4B5A78",tm:"#94A3B8",acl:"#FEF3DC",dan:"#DC2626",suc:"#059669",inf:"#2563EB",sh:"0 2px 12px rgba(26,39,68,0.08)"};
-
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const fd=d=>new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
 const fdt=d=>new Date(d).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
-
 const Av=({name,sz=28})=>{const i=(name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();const cols=["#2563EB","#7C3AED","#059669","#D97706","#DC2626","#0891B2"];const c=cols[(name||"").charCodeAt(0)%cols.length];return <div style={{width:sz,height:sz,borderRadius:"50%",background:c+"18",border:`2px solid ${c}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:sz*.36,fontWeight:800,color:c,flexShrink:0}}>{i}</div>;};
 const Bdg=({label,color="#6B7280",sm})=><span style={{display:"inline-flex",alignItems:"center",padding:sm?"2px 7px":"3px 10px",borderRadius:20,background:color+"18",color,border:`1px solid ${color}33`,fontSize:sm?10:11,fontWeight:700,whiteSpace:"nowrap"}}>{label}</span>;
 const bi={background:P.ibg,border:`1.5px solid ${P.bdrk}`,borderRadius:8,padding:"9px 12px",color:P.tp,fontSize:13,width:"100%",boxSizing:"border-box",outline:"none",fontFamily:"inherit"};
@@ -194,7 +185,6 @@ const Mdl=({title,subtitle,onClose,children,wide})=>(
     </div>
   </div>
 );
-
 const Ic=({n,s=16,c="currentColor"})=>{
   const d={
     X:<path d="M18 6L6 18M6 6l12 12" stroke={c} fill="none" strokeWidth="2" strokeLinecap="round"/>,
@@ -221,7 +211,6 @@ const Ic=({n,s=16,c="currentColor"})=>{
   };
   return <svg width={s} height={s} viewBox="0 0 24 24" style={{flexShrink:0}}>{d[n]||null}</svg>;
 };
-
 function Login({users,onLogin}){
   const [u,setU]=useState("");const [p,setP]=useState("");const [sp,setSp]=useState(false);const [err,setErr]=useState("");const [shk,setShk]=useState(false);
   const go=()=>{
@@ -251,7 +240,6 @@ function Login({users,onLogin}){
     </div>
   );
 }
-
 function RemarkBox({onAdd,cu}){
   const [txt,setTxt]=useState("");const [ch,setCh]=useState("");const [rem,setRem]=useState("");
   const gc=(t,d)=>{const dt=new Date(d||Date.now());dt.setDate(dt.getDate()+1);const s=dt.toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";const e=new Date(dt.getTime()+3600000).toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}&dates=${s}/${e}`;};
@@ -271,7 +259,6 @@ function RemarkBox({onAdd,cu}){
     </div>
   );
 }
-
 function Remarks({remarks}){
   return(
     <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:6}}>
@@ -293,7 +280,6 @@ function Remarks({remarks}){
     </div>
   );
 }
-
 function LeadDetail({lead,onClose,onUpdate,cu,users}){
   const [tab,setTab]=useState("info");const [editing,setEditing]=useState(false);
   const ce=cu.role==="admin"||cu.id===lead.assignedTo;
@@ -333,7 +319,6 @@ function LeadDetail({lead,onClose,onUpdate,cu,users}){
     </Mdl>
   );
 }
-
 function LeadForm({lead,onSave,onClose,users}){
   const E={company:"",contact:"",email:"",mobile:"",businessType:"",leadSource:"",clientSector:"",assignedTo:"",notes:""};
   const [f,setF]=useState(lead||E);const [err,setErr]=useState({});
@@ -356,7 +341,6 @@ function LeadForm({lead,onSave,onClose,users}){
     </div>
   );
 }
-
 function EmailLogForm({onSave,onClose}){
   const [f,setF]=useState({subject:"",toCompany:"",toContact:"",toEmail:"",clientSector:"",sentDate:new Date().toISOString().slice(0,10),body:"",status:"Sent"});
   const [err,setErr]=useState({});
@@ -378,7 +362,6 @@ function EmailLogForm({onSave,onClose}){
     </div>
   );
 }
-
 function UserMgmt({users,onSaveUsers,cu}){
   const [editId,setEditId]=useState(null);const [isNew,setIsNew]=useState(false);const [showPwd,setShowPwd]=useState({});const [delId,setDelId]=useState(null);
   const E={id:"",name:"",username:"",password:"",email:"",role:"sales"};
@@ -432,7 +415,6 @@ function UserMgmt({users,onSaveUsers,cu}){
     </div>
   );
 }
-
 function KCard({lead,onClick,users}){
   const u=users.find(x=>x.id===lead.assignedTo);
   return(
@@ -448,10 +430,8 @@ function KCard({lead,onClick,users}){
     </div>
   );
 }
-
 // ── RECOVERED DATA (restored from Google Sheet backup) ──────────────────────
 const RECOVERED_DATA = {"leads":[{"id":"mnwssobbm5f","company":"safa british school","contact":"Rental Dept","email":"reception@safabritishschool.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:48.599Z","updatedAt":"2026-04-13T06:14:48.599Z","fromEmailLog":true,"remarks":[{"id":"mnwssobb6io","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:48.599Z","channel":"Email","sys":true}]},{"id":"mnwsslz15fx","company":"Rotana Hotels","contact":"Rental Dept","email":"info@rotana.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:45.565Z","updatedAt":"2026-04-13T06:14:45.565Z","fromEmailLog":true,"remarks":[{"id":"mnwsslz12jx","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:45.565Z","channel":"Email","sys":true}]},{"id":"mnwssj746qb","company":"JESS Dubai","contact":"Rental Dept","email":"reception@jess.sch.ae","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:41.968Z","updatedAt":"2026-04-13T06:14:41.968Z","fromEmailLog":true,"remarks":[{"id":"mnwssj74uik","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:41.968Z","channel":"Email","sys":true}]},{"id":"mnwssd5llbw","company":"Hyatt Regency Dubai","contact":"Rental Dept","email":"dubai.regency@hyatt.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:34.137Z","updatedAt":"2026-04-13T06:14:34.137Z","fromEmailLog":true,"remarks":[{"id":"mnwssd5lfrw","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:34.137Z","channel":"Email","sys":true}]},{"id":"mnwss92jzke","company":"Murdoch University Dubai","contact":"Rental Dept","email":"mailto:dubai@murdoch.edu.au","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:28.843Z","updatedAt":"2026-04-13T06:14:28.843Z","fromEmailLog":true,"remarks":[{"id":"mnwss92jlf6","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:28.843Z","channel":"Email","sys":true}]},{"id":"mnwss4sir5n","company":"International School of Choueifat ","contact":"Rental Dept","email":"iscad@sabis.net","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:23.298Z","updatedAt":"2026-04-13T06:14:23.298Z","fromEmailLog":true,"remarks":[{"id":"mnwss4si9lp","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:23.298Z","channel":"Email","sys":true}]},{"id":"mnwsrxkyvbc","company":"Abu Dhabi International School ","contact":"Rental Dept","email":"aisem@emirates.net.ae","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:13.954Z","updatedAt":"2026-04-13T06:14:13.954Z","fromEmailLog":true,"remarks":[{"id":"mnwsrxky2rz","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:13.954Z","channel":"Email","sys":true}]},{"id":"mnwsrtfknmx","company":"International Community School ","contact":"Rental Dept","email":"info@icschool-uae.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:14:08.577Z","updatedAt":"2026-04-13T06:14:08.577Z","fromEmailLog":true,"remarks":[{"id":"mnwsrtflxmf","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:14:08.577Z","channel":"Email","sys":true}]},{"id":"mnwsrjbima9","company":"Dubai Customs","contact":"Rental Dept","email":"client.relations@dubaicustoms.gov.ae","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:13:55.470Z","updatedAt":"2026-04-13T06:13:55.470Z","fromEmailLog":true,"remarks":[{"id":"mnwsrjbi81i","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:13:55.470Z","channel":"Email","sys":true}]},{"id":"mnwsrdle5ve","company":"Schlumberger Dubai (Oilfield Services)","contact":"Rental Dept","email":"middleeast@slb.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Oil & Gas","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:13:48.050Z","updatedAt":"2026-04-13T06:13:48.050Z","fromEmailLog":true,"remarks":[{"id":"mnwsrdle96l","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:13:48.050Z","channel":"Email","sys":true}]},{"id":"mnwsr8zlcs6","company":"GEMS Cambridge International School - Dubai","contact":"Rental Dept","email":"info_cis@gemsedu.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-13T06:13:42.081Z","updatedAt":"2026-04-13T06:13:42.081Z","fromEmailLog":true,"remarks":[{"id":"mnwsr8zlexb","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email\"","date":"2026-04-13T06:13:42.081Z","channel":"Email","sys":true}]},{"id":"mnw7yv7773w","company":"Bab Al Qasr Hotel","contact":"","email":"info@babalqasr.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:45.523Z","updatedAt":"2026-04-12T20:31:45.523Z","fromEmailLog":true,"remarks":[{"id":"mnw7yv77010","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:45.523Z","channel":"Email","sys":true}]},{"id":"mnw7yti8jfv","company":"Saadiyat Rotana Resort & Villas","contact":"","email":"saadiyat.resort@rotana.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:43.328Z","updatedAt":"2026-04-12T20:31:43.328Z","fromEmailLog":true,"remarks":[{"id":"mnw7yti8rnr","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:43.328Z","channel":"Email","sys":true}]},{"id":"mnw7yq7m51s","company":"Fairmont Bab Al Bahr","contact":"","email":"babalbahr@fairmont.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:39.058Z","updatedAt":"2026-04-12T20:31:39.058Z","fromEmailLog":true,"remarks":[{"id":"mnw7yq7mewi","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:39.058Z","channel":"Email","sys":true}]},{"id":"mnw7ylnkspg","company":"Sheraton Abu Dhabi Hotel & Resort","contact":"","email":"sheraton.abudhabi@sheraton.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:33.152Z","updatedAt":"2026-04-12T20:31:33.152Z","fromEmailLog":true,"remarks":[{"id":"mnw7ylnk8ob","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:33.152Z","channel":"Email","sys":true}]},{"id":"mnw7yk61mj8","company":"W Abu Dhabi ","contact":"","email":"wabudhabi.events@whotels.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:31.225Z","updatedAt":"2026-04-12T20:31:31.225Z","fromEmailLog":true,"remarks":[{"id":"mnw7yk617ye","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:31.225Z","channel":"Email","sys":true}]},{"id":"mnw7yig92sz","company":"Hilton Abu Dhabi","contact":"","email":"abudhabi@hilton.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:29.001Z","updatedAt":"2026-04-12T20:31:29.001Z","fromEmailLog":true,"remarks":[{"id":"mnw7yig93c4","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:29.001Z","channel":"Email","sys":true}]},{"id":"mnw7yh0ly82","company":"InterContinental Abu Dhabi","contact":"","email":"abudhabi@icauh.ae","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:27.141Z","updatedAt":"2026-04-12T20:31:27.141Z","fromEmailLog":true,"remarks":[{"id":"mnw7yh0lxr2","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:27.141Z","channel":"Email","sys":true}]},{"id":"mnw7yfojwjm","company":"Al wathba resort abu dhabi","contact":"","email":"Info.Alwathba@luxurycollection.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:25.411Z","updatedAt":"2026-04-12T20:31:25.411Z","fromEmailLog":true,"remarks":[{"id":"mnw7yfoj2pb","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:25.411Z","channel":"Email","sys":true}]},{"id":"mnw7ycmdux3","company":"The EDITION Abu Dhabi","contact":"Eunice","email":"eunice.fernando@editionhotels.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:31:21.445Z","updatedAt":"2026-04-12T20:31:21.445Z","fromEmailLog":true,"remarks":[{"id":"mnw7ycmd9yj","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:31:21.445Z","channel":"Email","sys":true}]},{"id":"mnw7r1optgz","company":"Shangri-La Hotel, Qaryat al Beri","contact":"","email":"abudhabi@shangri-la.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:25:40.681Z","updatedAt":"2026-04-12T20:25:40.681Z","fromEmailLog":true,"remarks":[{"id":"mnw7r1op209","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:25:40.681Z","channel":"Email","sys":true}]},{"id":"mnw7qvh9sj7","company":"The St. Regis Saadiyat Island Resort","contact":"","email":"saadiyat@stregis.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:25:32.637Z","updatedAt":"2026-04-12T20:25:32.637Z","fromEmailLog":true,"remarks":[{"id":"mnw7qvh9tyz","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:25:32.637Z","channel":"Email","sys":true}]},{"id":"mnw7oofvjtj","company":"Conrad Abu Dhabi Etihad Towers","contact":"","email":"Etihadtowers.Info@ConradHotels.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:23:50.203Z","updatedAt":"2026-04-12T20:23:50.203Z","fromEmailLog":true,"remarks":[{"id":"mnw7oofvw7j","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:23:50.203Z","channel":"Email","sys":true}]},{"id":"mnw7omqpx1p","company":"Rosewood Abu Dhabi","contact":"","email":"info@rosewoodhotelgroup.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:23:48.001Z","updatedAt":"2026-04-12T20:23:48.001Z","fromEmailLog":true,"remarks":[{"id":"mnw7omqpdyt","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:23:48.001Z","channel":"Email","sys":true}]},{"id":"mnw7juzv9e3","company":"Emirates Palace Mandarin Oriental","contact":"","email":"weibels@mohg.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-12T20:20:05.419Z","updatedAt":"2026-04-12T20:20:05.419Z","fromEmailLog":true,"remarks":[{"id":"mnw7juzvcu3","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Customer Intro email\"","date":"2026-04-12T20:20:05.419Z","channel":"Email","sys":true}]},{"id":"mnu0cnkr5pu","company":"Classic Group","contact":"Munawar","email":"Marketing@cltdxb.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Travel & Tours Co","assignedTo":"mntwcz5y6wn","stage":"Opportunities","createdAt":"2026-04-11T07:22:59.547Z","updatedAt":"2026-04-11T07:25:17.457Z","fromEmailLog":true,"remarks":[{"id":"mnu0cnkre5f","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana - Intro Email\"","date":"2026-04-11T07:22:59.547Z","channel":"Email","sys":true},{"id":"mnu0flzluxl","author":"Dana","authorId":"mntwcz5y6wn","role":"sales","text":"No response, will be send a follow up or a call.","channel":"","reminder":"2026-04-16","date":"2026-04-11T07:25:17.457Z"}]},{"id":"mnu00vguqs3","company":"Classic Group ","contact":"Munawar","email":"marketing@cltdxb.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Travel & Tours Co","assignedTo":"mntwcz5y6wn","stage":"Lead Lost to Competitor","createdAt":"2026-04-11T07:13:49.902Z","updatedAt":"2026-04-11T07:27:29.718Z","fromEmailLog":true,"remarks":[{"id":"mnu00vgubkp","author":"Dana","authorId":"mntwcz5y6wn","text":"Converted from email: \"Dana- Customer Intro Email \"","date":"2026-04-11T07:13:49.902Z","channel":"Email","sys":true},{"id":"mnu01lyn72g","author":"Dana","authorId":"mntwcz5y6wn","role":"sales","text":"I ve sent a follow up email ","channel":"Email","reminder":"2026-03-12","date":"2026-04-11T07:14:24.239Z"},{"id":"mnu05hbinua","author":"Dana","authorId":"mntwcz5y6wn","role":"sales","text":"Spoke with customer and got a new POC ","channel":"Call","reminder":"","date":"2026-04-11T07:17:24.846Z"},{"id":"mnu06nmuf6v","author":"Dana","authorId":"mntwcz5y6wn","role":"sales","text":"Requested for a call next week ","channel":"Call","reminder":"2026-04-15","date":"2026-04-11T07:18:19.686Z"},{"id":"mnu0i3a7pbh","author":"Dana","authorId":"mntwcz5y6wn","text":"Stage → \"Gone Silent\"","channel":"","date":"2026-04-11T07:27:13.183Z","sys":true},{"id":"mnu0i8mesiq","author":"Dana","authorId":"mntwcz5y6wn","text":"Stage → \"Proposal\"","channel":"","date":"2026-04-11T07:27:20.102Z","sys":true},{"id":"mnu0ig1i7vh","author":"Dana","authorId":"mntwcz5y6wn","text":"Stage → \"Lead Lost to Competitor\"","channel":"","date":"2026-04-11T07:27:29.718Z","sys":true}]},{"id":"mnsw6e14mr6","company":"Classic Luxury Transport ","contact":"Munawar Haris ","email":"marketing@cltdxb.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Travel & Tours Co","assignedTo":"u3","stage":"Opportunities","createdAt":"2026-04-10T12:38:22.600Z","updatedAt":"2026-04-10T12:42:26.550Z","fromEmailLog":true,"remarks":[{"id":"mnsw6e14zv1","author":"Munawar Haris","authorId":"admin","text":"Converted from email: \"Zainab- Customer Intro Email \"","date":"2026-04-10T12:38:22.600Z","channel":"Email","sys":true},{"id":"mnsw7yvo9d3","author":"Zainab Al Dhanhan","authorId":"u3","role":"sales","text":"I need to call this customer on ","channel":"Call","reminder":"2026-04-11","date":"2026-04-10T12:39:36.276Z"},{"id":"mnsw93cc09d","author":"Zainab Al Dhanhan","authorId":"u3","role":"sales","text":"On speaking wiht the Customer is interested for meeting , munawar pls meet","channel":"Call","reminder":"","date":"2026-04-10T12:40:28.716Z"},{"id":"mnswbm9i97f","author":"Munawar Haris","authorId":"admin","role":"admin","text":"spoke with customer asked zainab to send profile ","channel":"","reminder":"2026-04-11","date":"2026-04-10T12:42:26.550Z"}]},{"id":"mnskatldm5j","company":"Atlas Copco","contact":"Rental Dept ","email":"rental.me@atlascopco.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Oil & Gas","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-10T07:05:54.001Z","updatedAt":"2026-04-10T07:09:36.713Z","fromEmailLog":true,"remarks":[{"id":"mnskatldl8p","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Mahra - Customer Intro email \"","date":"2026-04-10T07:05:54.001Z","channel":"Email","sys":true},{"id":"mnskcbe3gn7","author":"Mahra Saeed","authorId":"mnoec62h2vn","role":"sales","text":"I spoke with the customer and asked to send a proposal ","channel":"Call","reminder":"2026-04-10","date":"2026-04-10T07:07:03.723Z"}]},{"id":"mnr6bwf175s","company":"Hartland International School","contact":"Procurement Team","email":"admissions@hartlandinternational.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-09T07:47:03.517Z","updatedAt":"2026-04-09T07:48:58.980Z","fromEmailLog":true,"remarks":[{"id":"mnr6bwf1ar3","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Corporate Transportation Services Inquiry\"","date":"2026-04-09T07:47:03.517Z","channel":"Email","sys":true},{"id":"mnr6edibnry","author":"Munawar Haris","authorId":"admin","role":"admin","text":"call him again and confirm ","channel":"Call","reminder":"","date":"2026-04-09T07:48:58.980Z"}],"notes":"call the customer he is interested "},{"id":"mnr6a450ake","company":"Al Ghurair Infrastructure ","contact":"Sheik Sevana","email":"sheik.sevana@al-ghurair.com","mobile":"","businessType":"","leadSource":"Outbound Email","clientSector":"Oil & Gas","assignedTo":"admin","stage":"Opportunities","createdAt":"2026-04-09T07:45:40.212Z","updatedAt":"2026-04-09T07:45:40.212Z","fromEmailLog":true,"remarks":[{"id":"mnr6a450fa6","author":"Munawar Haris","authorId":"admin","text":"Converted from email: \"Classic Group of Companies // Al Ghurair Infrastructure \"","date":"2026-04-09T07:45:40.212Z","channel":"Email","sys":true}]},{"id":"mnoh4e3ez52","company":"Dubai British School","contact":"Procurement Team","email":"info@dubaibritishschool.ae","mobile":"","businessType":"B2B","leadSource":"Outbound Email","clientSector":"Semi-Govt Entity","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-07T10:25:50.426Z","updatedAt":"2026-04-09T07:45:03.755Z","fromEmailLog":true,"remarks":[{"id":"mnoh4e3eni3","author":"Munawar Haris","authorId":"admin","text":"Converted from email: \"Corporate Transportation Services Inquiry\"","date":"2026-04-07T10:25:50.426Z","channel":"Email","sys":true},{"id":"mnr69c0bss8","author":"Munawar Haris","authorId":"admin","role":"admin","text":"Call or sent an email","channel":"Email","reminder":"2026-04-10","date":"2026-04-09T07:45:03.755Z"}]},{"company":"Paramount hotel Dubai","contact":"Procurement Team","email":"marketing@paramounthotelsdubai.com","mobile":"+971 4 246 6666","businessType":"B2B","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","notes":"","id":"mnogbapkmt7","stage":"Opportunities","createdAt":"2026-04-07T10:03:13.016Z","updatedAt":"2026-04-08T13:58:44.819Z","remarks":[]},{"id":"mnog9qrsh6w","company":"Paramount hotel Dubai","contact":"Procurement Team","email":"marketing@paramounthotelsdubai.com","mobile":"+971 4 246 6666","businessType":"","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-07T10:02:00.520Z","updatedAt":"2026-04-08T14:02:00.004Z","fromEmailLog":true,"remarks":[{"id":"mnog9qrssab","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Corporate Transportation Services Inquiry\"","date":"2026-04-07T10:02:00.520Z","channel":"Email","sys":true}]},{"id":"mnog0qxcf8g","company":"Damac Hills 2 Hotel","contact":" Procurement Team","email":"res.damachills2@rotana.com","mobile":"04 418 0000","businessType":"B2B","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","stage":"Opportunities","createdAt":"2026-04-07T09:55:00.816Z","updatedAt":"2026-04-07T10:31:01.928Z","fromEmailLog":true,"remarks":[{"id":"mnog0qxcqf0","author":"Mahra Saeed","authorId":"mnoec62h2vn","text":"Converted from email: \"Corporate Transportation Services Inquiry\"","date":"2026-04-07T09:55:00.816Z","channel":"Email","sys":true}]},{"company":"Holiday Inn & Suites","contact":"Procurement Team","email":"imeet@ihg.com","mobile":"+971 (0)4 701 1111","businessType":"B2B","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","notes":"","id":"mnofryylmrb","stage":"Opportunities","createdAt":"2026-04-07T09:48:11.325Z","updatedAt":"2026-04-08T14:02:21.859Z","remarks":[]},{"company":"Atlantis The Palm, Dubai","contact":"Procurement Team","email":"info@atlantis.com","mobile":"+971 4 426 0000","businessType":"B2B","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"mnoec62h2vn","notes":"","id":"mnoevtv84r7","stage":"Opportunities","createdAt":"2026-04-07T09:23:11.732Z","updatedAt":"2026-04-08T14:06:20.411Z","remarks":[]},{"company":"Hilton Dubai Jumeirah","contact":"Procurement Team","email":"info.dubai@hilton.com","mobile":"+971 4 399 1111","businessType":"B2B","leadSource":"Outbound Email","clientSector":"Hotels","assignedTo":"admin","notes":"","id":"mnoertzhqra","stage":"Opportunities","createdAt":"2026-04-07T09:20:05.261Z","updatedAt":"2026-04-07T09:20:05.261Z","remarks":[]},{"company":"Classic Luxury Transport","contact":"Masood Bawazeer","email":"Corporate@cltdxb.com","mobile":"+97143584111","businessType":"B2B","leadSource":"Inbound Email","clientSector":"Travel & Tours Co","assignedTo":"u2","notes":"","id":"mno9dd0g6du","stage":"Opportunities","createdAt":"2026-04-07T06:48:52.000Z","updatedAt":"2026-04-08T14:07:06.078Z","remarks":[]}]};
-
 function App(){
   const [users,setUsers]=useState(RECOVERED_DATA.users||DEFUSERS);
   const [leads,setLeads]=useState(RECOVERED_DATA.leads||[]);
@@ -472,7 +452,6 @@ function App(){
   const [lastSync,setLastSync]=useState(null);
   const [connErr,setConnErr]=useState(false);
   const saveTimer=useRef(null);
-
   // ── FIX: use refs to always have latest state in async closures ──────────
   const leadsRef=useRef(RECOVERED_DATA.leads||[]);
   const emailsRef=useRef(RECOVERED_DATA.emails||[]);
@@ -480,7 +459,6 @@ function App(){
   useEffect(()=>{leadsRef.current=leads;},[leads]);
   useEffect(()=>{emailsRef.current=emails;},[emails]);
   useEffect(()=>{usersRef.current=users;},[users]);
-
   const loadData=useCallback(async(quiet=false)=>{
     try{
       const d=await gasGet();
@@ -492,9 +470,7 @@ function App(){
     }catch(e){setConnErr(true);}
     if(!quiet)setLoading(false);
   },[]);
-
   useEffect(()=>{loadData();},[]);
-
   // ── FIX: persist now reads from refs so it always gets the latest data ───
   // The core bug was: setLeads(nl) is async, so gasPost(nl, emails, users)
   // would capture stale `emails` and `users` from the closure.
@@ -512,22 +488,18 @@ function App(){
       finally{setSaving(false);}
     },600);
   },[]);
-
   const saveUsers=nu=>persist(leadsRef.current,emailsRef.current,nu);
-
   const addLead=d=>{
     const l={...d,id:uid(),stage:"Opportunities",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),remarks:d.notes?.trim()?[{id:uid(),author:cu.name,authorId:cu.id,role:cu.role,text:d.notes,date:new Date().toISOString(),channel:""}]:[]};
     const nl=[l,...leadsRef.current];
     persist(nl,emailsRef.current,usersRef.current);
     setShowLF(false);
   };
-
   const updLead=l=>{
     const nl=leadsRef.current.map(x=>x.id===l.id?l:x);
     setSelLead(l);
     persist(nl,emailsRef.current,usersRef.current);
   };
-
   const addEmail=d=>{
     const ne=[{
       ...d,
@@ -543,13 +515,11 @@ function App(){
     persist(leadsRef.current,ne,usersRef.current);
     setShowEF(false);
   };
-
   const updEmail=e=>{
     const ne=emailsRef.current.map(x=>x.id===e.id?e:x);
     setSelEmail(e);
     persist(leadsRef.current,ne,usersRef.current);
   };
-
   // ── FIX: convert now builds nl/ne from refs and awaits gasPost directly ──
   const convert=async(log)=>{
     const l={
@@ -571,7 +541,6 @@ function App(){
     const updatedLog={...log,converted:true,updatedAt:new Date().toISOString()};
     const nl=[l,...leadsRef.current];
     const ne=emailsRef.current.map(e=>e.id===log.id?updatedLog:e);
-
     // Update state + refs immediately
     setLeads(nl);
     setEmails(ne);
@@ -579,7 +548,6 @@ function App(){
     emailsRef.current=ne;
     setSelEmail(null);
     setView("leads");
-
     // Save directly (don't debounce — conversion is critical)
     setSaving(true);
     clearTimeout(saveTimer.current);
@@ -593,12 +561,10 @@ function App(){
       setSaving(false);
     }
   };
-
   const importLeadsCSV=nl=>{const ex=new Set(leadsRef.current.map(l=>l.email.toLowerCase()));const fr=nl.filter(l=>!ex.has(l.email.toLowerCase()));if(!fr.length){alert("No new leads.");return;}const m=[...fr,...leadsRef.current];persist(m,emailsRef.current,usersRef.current);alert(`✓ Imported ${fr.length} leads.`);};
   const importEmailsCSV=ne=>{const ex=new Set(emailsRef.current.map(e=>(e.toEmail+e.subject).toLowerCase()));const fr=ne.filter(e=>!ex.has((e.toEmail+e.subject).toLowerCase()));if(!fr.length){alert("No new emails.");return;}const m=[...fr,...emailsRef.current];persist(leadsRef.current,m,usersRef.current);alert(`✓ Imported ${fr.length} emails.`);};
   const parseCSV=txt=>{const lines=txt.split(/\r?\n/).filter(l=>l.trim());return lines.slice(1).map(line=>{const cols=[];let cur="",inQ=false;for(const ch of line){if(ch==='"'){inQ=!inQ;}else if(ch===","&&!inQ){cols.push(cur.trim());cur="";}else{cur+=ch;}}cols.push(cur.trim());return cols.map(c=>c.replace(/^"|"$/g,"").trim());}).filter(r=>r.some(c=>c));};
   const dlCSV=(s,name)=>{const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(s);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);};
-
   const fl=leads.filter(l=>{
     if(fsStage!=="All"&&l.stage!==fsStage)return false;
     if(fsSect!=="All"&&l.clientSector!==fsSect)return false;
@@ -606,23 +572,19 @@ function App(){
     if(cu?.role!=="admin"&&l.assignedTo&&l.assignedTo!==cu?.id)return false;
     return true;
   });
-
   if(loading)return(
     <div style={{minHeight:"100vh",background:P.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,fontFamily:"'Segoe UI',sans-serif"}}>
       <div style={{width:48,height:48,borderRadius:13,background:P.sb,display:"flex",alignItems:"center",justifyContent:"center"}}><Ic n="gs" s={22} c={P.acc}/></div>
       <div style={{fontSize:14,fontWeight:700,color:P.ts}}>Connecting to Google Sheets…</div>
     </div>
   );
-
   if(!li)return <Login users={users} onLogin={u=>{
     setCu(u);setLi(true);
     // Send ONLY the loginLog — tiny payload, always fits in 1 chunk
     gasPost({loginLog:{userId:u.id,userName:u.name,userRole:u.role,username:u.username,loginTime:new Date().toISOString()}});
   }}/>;
-
   const NAV=[{id:"dash",label:"Dashboard",icon:"bk"},{id:"leads",label:"Leads Pipeline",icon:"usr"},{id:"emails",label:"Email Log",icon:"em"},{id:"import",label:"Import Data",icon:"dl"},{id:"track",label:"Conversion Tracker",icon:"ch"},...(cu.role==="admin"?[{id:"users",label:"User Management",icon:"shd"}]:[])];
   const ss=STAGES.map(s=>({stage:s,count:leads.filter(l=>l.stage===s).length}));
-
   return(
     <div style={{display:"flex",minHeight:"100vh",background:P.bg,fontFamily:"'Segoe UI',system-ui,sans-serif",color:P.tp}}>
       <style>{`*{box-sizing:border-box;}select option{background:#fff;color:#1A2744;}`}</style>
@@ -651,14 +613,12 @@ function App(){
           </button>
         </div>
       </div>
-
       <div style={{flex:1,overflowY:"auto",maxHeight:"100vh"}}>
         <div style={{background:P.card,borderBottom:`1px solid ${P.bdr}`,padding:"8px 28px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:12,position:"sticky",top:0,zIndex:50}}>
           {connErr&&<span style={{fontSize:11,color:P.dan,fontWeight:600}}>⚠ Connection error — check GAS script</span>}
           <span style={{fontSize:11,color:saving?P.acc:P.suc,fontWeight:600}}>{saving?"⏳ Saving to Google Sheets…":`✓ Synced ${lastSync?lastSync.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"—"}`}</span>
           <Btn v="gh" sm icon="rf" disabled={saving} onClick={()=>loadData(false)}>Refresh</Btn>
         </div>
-
         {view==="dash"&&(
           <div style={{padding:"24px 28px"}}>
             <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:24,fontWeight:800,color:P.tp}}>Good {new Date().getHours()<12?"Morning":"Afternoon"}, {cu.name.split(" ")[0]} 👋</h1>
@@ -698,7 +658,6 @@ function App(){
             </div>
           </div>
         )}
-
         {view==="leads"&&(
           <div style={{padding:"24px 28px"}}>
             <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:20,flexWrap:"wrap"}}>
@@ -757,7 +716,6 @@ function App(){
             )}
           </div>
         )}
-
         {view==="emails"&&(
           <div style={{padding:"24px 28px"}}>
             <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:20}}>
@@ -786,7 +744,6 @@ function App(){
             </div>
           </div>
         )}
-
         {view==="import"&&(
           <div style={{padding:"24px 28px"}}>
             <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Import Data</h1>
@@ -817,7 +774,6 @@ function App(){
             </div>
           </div>
         )}
-
         {view==="track"&&(
           <div style={{padding:"24px 28px"}}>
             <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>Conversion Tracker</h1>
@@ -841,7 +797,6 @@ function App(){
             </div>
           </div>
         )}
-
         {view==="users"&&cu.role==="admin"&&(
           <div style={{padding:"24px 28px"}}>
             <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",fontSize:22,fontWeight:800,color:P.tp}}>User Management</h1>
@@ -850,7 +805,6 @@ function App(){
           </div>
         )}
       </div>
-
       {showLF&&<Mdl title="Add New Lead" onClose={()=>setShowLF(false)} wide><LeadForm users={users} onClose={()=>setShowLF(false)} onSave={addLead}/></Mdl>}
       {showEF&&<Mdl title="Log Outbound Email" onClose={()=>setShowEF(false)} wide><EmailLogForm onClose={()=>setShowEF(false)} onSave={addEmail}/></Mdl>}
       {selLead&&<LeadDetail lead={selLead} onClose={()=>setSelLead(null)} onUpdate={updLead} cu={cu} users={users}/>}
@@ -875,7 +829,6 @@ function App(){
     </div>
   );
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
