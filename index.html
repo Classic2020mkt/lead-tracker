@@ -1,1 +1,16 @@
-
+// ── SAVE: URLSearchParams — body survives GAS redirect, action always set ────
+const gasPost=async(d)=>{
+  const action=d.loginLog?'logLogin':'saveAndSync';
+  const params=new URLSearchParams();
+  params.append('action',action);
+  params.append('payload',JSON.stringify(d));
+  try{
+    const resp=await fetch(GAS,{method:"POST",body:params});
+    const result=await resp.json().catch(()=>({ok:true}));
+    console.log("gasPost response:",result);
+    return result;
+  }catch(err){
+    console.warn('gasPost failed:',err.message);
+    return{ok:false};
+  }
+};
