@@ -30,7 +30,7 @@ const API_KEY="AIzaSyDMSRrll3xxyUA8pHj0RD-pL8O2LNDMEcA";
 const gasGet=async()=>{
   try {
     // Read the lt_data value from LeadTrackerDB tab
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/LeadTrackerDB!B2?key=${API_KEY}`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/LeadTrackerDB!B2?key=${API_KEY}&_=${Date.now()}`;
     const resp=await fetch(url);
     if(!resp.ok) throw new Error("Sheets API error: "+resp.status);
     const json=await resp.json();
